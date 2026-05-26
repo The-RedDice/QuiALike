@@ -38,8 +38,9 @@ TIKTOK_CLIENT_SECRET=your_tiktok_client_secret
 TIKTOK_REDIRECT_URI=http://localhost:3000/api/auth/tiktok/callback
 # Optionnel : changer le port (3000 par défaut)
 PORT=3000
-# Optionnel : changer l'adresse IP d'écoute du serveur (localhost par défaut).
-# Mettre à 0.0.0.0 pour écouter sur toutes les interfaces (utile sur un VPS)
+# Optionnel : changer le nom d'hôte affiché dans l'application (localhost par défaut).
+# Sur votre VPS Oracle, mettez votre nom de domaine ou IP publique, ex: my-game.com ou 141.145.200.136
+# Note: Le serveur s'attachera toujours automatiquement sur 0.0.0.0 pour éviter les problèmes de NAT sur Oracle Cloud.
 SERVER_IP=localhost
 ```
 
@@ -54,18 +55,39 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser.
 
-## Deploying on an Oracle VM (or any Linux VPS)
+## Deploying on an Oracle VM
 
-To deploy the game on your Oracle server and ensure it keeps running after you close your SSH session (console), we use `pm2`.
+Oracle Cloud VPS uses a NAT network. Your server does not directly know its public IP address (`141.145.200.136`).
+If you try to bind Node.js directly to the public IP, it will crash with an `EADDRNOTAVAIL` error.
+
+The code is already configured to automatically bind to `0.0.0.0` (all interfaces) to bypass this issue, but you still need to open the ports on Oracle's firewall and run the application in the background.
 
 ### Prerequisites on your Server
 
 1. SSH into your Oracle server.
-2. Install Node.js and npm (if not already installed).
-3. Install `pm2` globally:
+2. Install Node.js (v18+) and npm.
+3. Install `pm2` globally to keep the app running forever:
    ```bash
    sudo npm install -g pm2
    ```
+
+### 1. Open Ports in Oracle Cloud
+By default, Oracle Cloud blocks inbound traffic. You need to open your chosen port (e.g., `8443` or `3000`):
+1. Go to your Oracle Cloud Dashboard.
+2. Navigate to **Networking > Virtual Cloud Networks**.
+3. Select your VCN, then your Subnet.
+4. Click on your **Security List**.
+5. Add an Ingress Rule:
+   - Source CIDR: `0.0.0.0/0`
+   - Destination Port Range: `8443` (or whatever port you are using).
+
+You may also need to open it in Ubuntu's internal firewall (iptables/ufw):
+```bash
+sudo iptables -I INPUT 6 -m state --state NEW -p tcp --dport 8443 -j ACCEPT
+sudo netfilter-persistent save
+# OR if using UFW:
+sudo ufw allow 8443
+```
 
 ### Deployment Steps
 

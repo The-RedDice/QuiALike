@@ -246,8 +246,10 @@ app.prepare().then(() => {
     handle(req, res, parsedUrl);
   });
 
-  // If SERVER_IP is '0.0.0.0' or specific IP, bind to it, otherwise default behavior
-  server.listen(port, hostname === "localhost" ? undefined : hostname, () => {
+  // Always bind to 0.0.0.0 so that it works behind NAT on Oracle VPS
+  // The Next.js app knows its hostname for rendering, but the server needs to listen on all interfaces
+  server.listen(port, "0.0.0.0", () => {
     console.log(`> Ready on http://${hostname}:${port}`);
+    console.log(`> Listening on all interfaces (0.0.0.0:${port})`);
   });
 });
