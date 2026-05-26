@@ -17,6 +17,26 @@ export default function Home() {
   const [profile, setProfile] = useState({ username: "", avatar: "" });
 
   useEffect(() => {
+    // Check for TikTok profile cookie
+    const checkTikTokCookie = () => {
+      const match = document.cookie.match(new RegExp('(^| )tiktok_profile=([^;]+)'));
+      if (match) {
+        try {
+          const profileData = JSON.parse(decodeURIComponent(match[2]));
+          setProfile(profileData);
+          setIsLoggedIn(true);
+          // Optional: Clear the cookie after reading if you want to rely on state,
+          // but keeping it allows for persistent login across refreshes.
+        } catch (e) {
+          console.error("Failed to parse TikTok profile cookie", e);
+        }
+      }
+    };
+
+    checkTikTokCookie();
+  }, []);
+
+  useEffect(() => {
     if (!socket) return;
 
     socket.on("room-created", (newRoom: Room) => {
@@ -63,8 +83,15 @@ export default function Home() {
   }, [socket]);
 
   const handleTikTokLogin = (username: string, avatar: string) => {
+    // This is now unused, as login happens via OAuth redirect and cookie,
+    // but kept for component compatibility if needed.
     setProfile({ username, avatar });
     setIsLoggedIn(true);
+  };
+
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+    document.cookie = "tiktok_profile=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
   };
 
   const createRoom = () => {
@@ -151,7 +178,7 @@ export default function Home() {
                     <p className="text-xs font-bold text-gray-400 uppercase">Connecté en tant que</p>
                     <p className="text-xl font-black">@{profile.username}</p>
                 </div>
-                <button onClick={() => setIsLoggedIn(false)} className="ml-auto text-xs font-bold text-gray-400 hover:text-black">Changer</button>
+                <button onClick={handleLogout} className="ml-auto text-xs font-bold text-gray-400 hover:text-black">Changer</button>
              </div>
 
             <div className="space-y-3">

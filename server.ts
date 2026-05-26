@@ -5,6 +5,11 @@ import { Server } from "socket.io";
 import express from "express";
 import { nanoid } from "nanoid";
 import { Room, Player, Video } from "./src/types";
+import dotenv from "dotenv";
+import axios from "axios";
+import cookieParser from "cookie-parser";
+
+dotenv.config();
 
 const dev = process.env.NODE_ENV !== "production";
 const hostname = "localhost";
@@ -22,8 +27,83 @@ const rooms: Map<string, Room> = new Map();
 
 app.prepare().then(() => {
   const expressApp = express();
+  expressApp.use(cookieParser());
   const server = createServer(expressApp);
   const io = new Server(server);
+
+  // TikTok OAuth Routes
+  expressApp.get("/api/auth/tiktok", (req, res) => {
+    const csrfState = Math.random().toString(36).substring(2);
+    res.cookie("csrfState", csrfState, { maxAge: 60000 });
+
+    const clientKey = process.env.TIKTOK_CLIENT_KEY;
+    if (!clientKey) {
+      return res.status(500).send("TikTok Client Key not configured");
+    }
+
+    let url = "https://www.tiktok.com/v2/auth/authorize/";
+    url += `?client_key=${clientKey}`;
+    url += "&scope=user.info.basic";
+    url += "&response_type=code";
+    url += `&redirect_uri=${encodeURIComponent(process.env.TIKTOK_REDIRECT_URI || 'http://localhost:3000/api/auth/tiktok/callback')}`;
+    url += `&state=${csrfState}`;
+
+    res.redirect(url);
+  });
+
+  expressApp.get("/api/auth/tiktok/callback", async (req, res) => {
+    const { code, state } = req.query;
+    const csrfState = req.cookies.csrfState;
+
+    if (state !== csrfState) {
+      return res.status(400).send("Invalid state parameter");
+    }
+
+    try {
+      const tokenUrl = "https://open.tiktokapis.com/v2/oauth/token/";
+      const clientKey = process.env.TIKTOK_CLIENT_KEY;
+      const clientSecret = process.env.TIKTOK_CLIENT_SECRET;
+      const redirectUri = process.env.TIKTOK_REDIRECT_URI || 'http://localhost:3000/api/auth/tiktok/callback';
+
+      const tokenResponse = await axios.post(tokenUrl, new URLSearchParams({
+        client_key: clientKey || '',
+        client_secret: clientSecret || '',
+        code: code as string,
+        grant_type: 'authorization_code',
+        redirect_uri: redirectUri
+      }).toString(), {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Cache-Control': 'no-cache'
+        }
+      });
+
+      const accessToken = tokenResponse.data.access_token;
+
+      const userInfoUrl = "https://open.tiktokapis.com/v2/user/info/?fields=open_id,union_id,avatar_url,display_name";
+      const userInfoResponse = await axios.get(userInfoUrl, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
+      });
+
+      const user = userInfoResponse.data.data.user;
+
+      // Redirect back to the frontend with the user data in a cookie or query params
+      // Using cookies for a cleaner URL
+      const profile = {
+        username: user.display_name,
+        avatar: user.avatar_url
+      };
+
+      res.cookie("tiktok_profile", JSON.stringify(profile), { maxAge: 3600000 }); // 1 hour
+      res.redirect("/");
+
+    } catch (error) {
+      console.error("TikTok OAuth error:", error);
+      res.redirect("/?error=auth_failed");
+    }
+  });
 
   io.on("connection", (socket) => {
     console.log("New connection:", socket.id);
