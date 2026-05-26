@@ -36,6 +36,8 @@ TIKTOK_CLIENT_KEY=your_tiktok_client_key
 TIKTOK_CLIENT_SECRET=your_tiktok_client_secret
 # Use your production domain when deploying, e.g., https://my-game.com/api/auth/tiktok/callback
 TIKTOK_REDIRECT_URI=http://localhost:3000/api/auth/tiktok/callback
+# Optionnel : changer le port (3000 par défaut)
+PORT=3000
 ```
 
 ### 3. Local Development
