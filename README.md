@@ -38,6 +38,9 @@ TIKTOK_CLIENT_SECRET=your_tiktok_client_secret
 TIKTOK_REDIRECT_URI=http://localhost:3000/api/auth/tiktok/callback
 # Optionnel : changer le port (3000 par défaut)
 PORT=3000
+# Optionnel : changer l'adresse IP d'écoute du serveur (localhost par défaut).
+# Mettre à 0.0.0.0 pour écouter sur toutes les interfaces (utile sur un VPS)
+SERVER_IP=localhost
 ```
 
 ### 3. Local Development

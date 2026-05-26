@@ -12,7 +12,7 @@ import cookieParser from "cookie-parser";
 dotenv.config();
 
 const dev = process.env.NODE_ENV !== "production";
-const hostname = "localhost";
+const hostname = process.env.SERVER_IP || "localhost";
 const port = parseInt(process.env.PORT || "3000", 10);
 const app = next({ dev, hostname, port });
 const handle = app.getRequestHandler();
@@ -246,7 +246,8 @@ app.prepare().then(() => {
     handle(req, res, parsedUrl);
   });
 
-  server.listen(port, () => {
+  // If SERVER_IP is '0.0.0.0' or specific IP, bind to it, otherwise default behavior
+  server.listen(port, hostname === "localhost" ? undefined : hostname, () => {
     console.log(`> Ready on http://${hostname}:${port}`);
   });
 });
