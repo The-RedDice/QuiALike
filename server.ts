@@ -16,6 +16,12 @@ const publicHostname = process.env.SERVER_IP || "localhost";
 // Always use 0.0.0.0 internally to bypass NAT restrictions on VPS (like Oracle Cloud)
 // Next.js will use this internally, and we also pass it to our custom server.listen.
 const bindHostname = "0.0.0.0";
+
+// Forcefully delete HOSTNAME and HOST from environment before Next.js initializes.
+// If Next.js detects these, it will try to bind to them instead of 0.0.0.0, causing EADDRNOTAVAIL on Oracle VPS.
+if (process.env.HOSTNAME) delete process.env.HOSTNAME;
+if (process.env.HOST) delete process.env.HOST;
+
 const port = parseInt(process.env.PORT || "3000", 10);
 
 const app = next({ dev, hostname: bindHostname, port });
@@ -38,7 +44,8 @@ app.prepare().then(() => {
   // TikTok OAuth Routes
   expressApp.get("/api/auth/tiktok", (req, res) => {
     const csrfState = Math.random().toString(36).substring(2);
-    res.cookie("csrfState", csrfState, { maxAge: 60000 });
+    // Set CSRF max age to 10 minutes (600,000 ms) so users have time to log in
+    res.cookie("csrfState", csrfState, { maxAge: 600000 });
 
     const clientKey = process.env.TIKTOK_CLIENT_KEY;
     if (!clientKey) {

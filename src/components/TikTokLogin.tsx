@@ -1,10 +1,6 @@
 "use client";
 
-interface TikTokLoginProps {
-  onLogin?: (username: string, avatar: string) => void;
-}
-
-export default function TikTokLogin({}: TikTokLoginProps) {
+export default function TikTokLogin() {
   const handleLogin = () => {
     window.location.href = "/api/auth/tiktok";
   };
