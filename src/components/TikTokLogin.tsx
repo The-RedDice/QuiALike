@@ -36,19 +36,19 @@ export default function TikTokLogin({ onLogin }: TikTokLoginProps) {
     <div className="w-full relative z-10 animate-in fade-in zoom-in duration-500">
       <div className="flex justify-center mb-8 relative">
         <div className="absolute inset-0 bg-gradient-to-r from-[#00f2fe]/20 to-[#fe2c55]/20 blur-xl rounded-full w-20 h-20 mx-auto -z-10 animate-pulse"></div>
-        <div className="w-16 h-16 bg-white rounded-full shadow-lg border border-gray-100 flex items-center justify-center">
+        <div className="w-16 h-16 bg-[#18181b] rounded-full shadow-lg border border-white/10 flex items-center justify-center">
             <span className="text-3xl hover:rotate-12 hover:scale-110 transition-transform cursor-default">👋</span>
         </div>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6 w-full">
-        <div className="text-center text-sm text-gray-500 font-medium tracking-wide">
+        <div className="text-center text-sm text-gray-400 font-medium tracking-wide">
           Entrez votre pseudo TikTok pour jouer
         </div>
 
         <div className="space-y-2">
           <div className="relative group">
-              <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-[#00f2fe] transition-colors">
+              <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-gray-500 group-focus-within:text-[#00f2fe] transition-colors">
                   <span className="font-bold text-lg">@</span>
               </div>
               <input
@@ -56,11 +56,11 @@ export default function TikTokLogin({ onLogin }: TikTokLoginProps) {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               placeholder="pseudo"
-              className="w-full pl-10 pr-4 py-4 rounded-2xl border border-gray-200 focus:outline-none focus:ring-4 focus:ring-[#00f2fe]/10 focus:border-[#00f2fe] transition-all bg-white font-bold text-gray-900 shadow-sm"
+              className="w-full pl-10 pr-4 py-4 rounded-2xl border border-white/10 focus:outline-none focus:ring-4 focus:ring-[#00f2fe]/20 focus:border-[#00f2fe] transition-all bg-[#18181b] font-bold text-white shadow-sm placeholder:text-gray-600"
               disabled={isLoading}
               />
           </div>
-          {error && <p className="text-[#fe2c55] font-bold text-xs bg-[#fe2c55]/10 py-2 px-3 rounded-lg text-center animate-bounce">{error}</p>}
+          {error && <p className="text-[#fe2c55] font-bold text-xs bg-[#fe2c55]/10 border border-[#fe2c55]/20 py-2 px-3 rounded-lg text-center animate-bounce">{error}</p>}
         </div>
 
         <button
@@ -68,8 +68,8 @@ export default function TikTokLogin({ onLogin }: TikTokLoginProps) {
           disabled={isLoading || !username.trim()}
           className={`relative w-full overflow-hidden group py-4 rounded-2xl font-black text-lg tracking-wide transition-all flex items-center justify-center gap-3 ${
             isLoading || !username.trim()
-              ? "bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200"
-              : "bg-black text-white hover:scale-[0.98] shadow-2xl shadow-black/20"
+              ? "bg-[#18181b] text-gray-500 cursor-not-allowed border border-white/5"
+              : "bg-white text-black hover:scale-[0.98] shadow-xl shadow-white/10"
           }`}
         >
           {(!isLoading && username.trim()) && <div className="absolute inset-0 bg-gradient-to-r from-[#00f2fe]/20 to-[#fe2c55]/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>}
