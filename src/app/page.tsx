@@ -82,13 +82,6 @@ export default function Home() {
     };
   }, [socket]);
 
-  const handleTikTokLogin = (username: string, avatar: string) => {
-    // This is now unused, as login happens via OAuth redirect and cookie,
-    // but kept for component compatibility if needed.
-    setProfile({ username, avatar });
-    setIsLoggedIn(true);
-  };
-
   const handleLogout = () => {
     setIsLoggedIn(false);
     document.cookie = "tiktok_profile=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
@@ -167,7 +160,7 @@ export default function Home() {
 
         {!isLoggedIn ? (
           <div className="bg-gray-50 p-8 rounded-[2.5rem] border border-gray-100">
-            <TikTokLogin onLogin={handleTikTokLogin} />
+            <TikTokLogin />
           </div>
         ) : (
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">

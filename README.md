@@ -39,8 +39,8 @@ TIKTOK_REDIRECT_URI=http://localhost:3000/api/auth/tiktok/callback
 # Optionnel : changer le port (3000 par défaut)
 PORT=3000
 # Optionnel : changer le nom d'hôte affiché dans l'application (localhost par défaut).
-# Sur votre VPS Oracle, mettez votre nom de domaine ou IP publique, ex: my-game.com ou 141.145.200.136
-# Note: Le serveur s'attachera toujours automatiquement sur 0.0.0.0 pour éviter les problèmes de NAT sur Oracle Cloud.
+# Sur votre VPS Oracle, mettez votre nom de domaine ou IP publique pour l'affichage (ex: SERVER_IP=141.145.200.136).
+# IMPORTANT: Ne JAMAIS utiliser les variables `HOSTNAME` ou `HOST` avec votre IP publique sur un VPS Oracle. Cela cause l'erreur `EADDRNOTAVAIL` car Next.js tentera de s'attacher à cette adresse externe. Le code efface désormais ces variables s'il les détecte, garantissant une liaison sur 0.0.0.0.
 SERVER_IP=localhost
 ```
 
