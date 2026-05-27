@@ -8,6 +8,7 @@ import { Room, Player, Video } from "./src/types";
 import dotenv from "dotenv";
 import axios from "axios";
 import cookieParser from "cookie-parser";
+import * as cheerio from "cheerio";
 
 dotenv.config();
 
@@ -41,78 +42,50 @@ app.prepare().then(() => {
   const server = createServer(expressApp);
   const io = new Server(server);
 
-  // TikTok OAuth Routes
-  expressApp.get("/api/auth/tiktok", (req, res) => {
-    const csrfState = Math.random().toString(36).substring(2);
-    // Set CSRF max age to 10 minutes (600,000 ms) so users have time to log in
-    res.cookie("csrfState", csrfState, { maxAge: 600000 });
+  // Simple TikTok Profile Scraper (Bypasses OAuth)
+  expressApp.get("/api/profile/:username", async (req, res) => {
+    let { username } = req.params;
 
-    const clientKey = process.env.TIKTOK_CLIENT_KEY;
-    if (!clientKey) {
-      return res.status(500).send("TikTok Client Key not configured");
+    // Clean up username if they included the @ symbol
+    if (username.startsWith('@')) {
+      username = username.substring(1);
     }
 
-    let url = "https://www.tiktok.com/v2/auth/authorize/";
-    url += `?client_key=${clientKey}`;
-    url += "&scope=user.info.basic";
-    url += "&response_type=code";
-    url += `&redirect_uri=${encodeURIComponent(process.env.TIKTOK_REDIRECT_URI || 'http://localhost:3000/api/auth/tiktok/callback')}`;
-    url += `&state=${csrfState}`;
-
-    res.redirect(url);
-  });
-
-  expressApp.get("/api/auth/tiktok/callback", async (req, res) => {
-    const { code, state } = req.query;
-    const csrfState = req.cookies.csrfState;
-
-    if (state !== csrfState) {
-      return res.status(400).send("Invalid state parameter");
-    }
+    // Fallback generic avatar
+    const fallbackAvatar = `https://ui-avatars.com/api/?name=${username}&background=random&color=fff&size=200`;
 
     try {
-      const tokenUrl = "https://open.tiktokapis.com/v2/oauth/token/";
-      const clientKey = process.env.TIKTOK_CLIENT_KEY;
-      const clientSecret = process.env.TIKTOK_CLIENT_SECRET;
-      const redirectUri = process.env.TIKTOK_REDIRECT_URI || 'http://localhost:3000/api/auth/tiktok/callback';
-
-      const tokenResponse = await axios.post(tokenUrl, new URLSearchParams({
-        client_key: clientKey || '',
-        client_secret: clientSecret || '',
-        code: code as string,
-        grant_type: 'authorization_code',
-        redirect_uri: redirectUri
-      }).toString(), {
+      // Attempt to scrape the public TikTok profile
+      const response = await axios.get(`https://www.tiktok.com/@${username}`, {
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'Cache-Control': 'no-cache'
-        }
+          // Emulate a standard browser to reduce blocking chances
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+          "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+          "Accept-Language": "en-US,en;q=0.5"
+        },
+        timeout: 5000 // Don't hang forever if TikTok is blocking us
       });
 
-      const accessToken = tokenResponse.data.access_token;
+      const $ = cheerio.load(response.data);
+      // TikTok usually stores the profile picture in the og:image meta tag
+      let avatar = $('meta[property="og:image"]').attr('content');
 
-      const userInfoUrl = "https://open.tiktokapis.com/v2/user/info/?fields=open_id,union_id,avatar_url,display_name";
-      const userInfoResponse = await axios.get(userInfoUrl, {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`
-        }
+      if (!avatar || avatar.includes('tiktok_logo')) {
+        avatar = fallbackAvatar;
+      }
+
+      res.json({
+        username: username,
+        avatar: avatar
       });
-
-      const user = userInfoResponse.data.data.user;
-
-      // Redirect back to the frontend with the user data in a cookie or query params
-      // Using cookies for a cleaner URL
-      const profile = {
-        username: user.display_name,
-        avatar: user.avatar_url
-      };
-
-      res.cookie("tiktok_profile", JSON.stringify(profile), { maxAge: 3600000 }); // 1 hour
-      res.redirect("/");
 
     } catch (error) {
-      console.error("TikTok OAuth error:", error);
-      res.redirect("/?error=auth_failed");
+      console.warn(`Failed to scrape avatar for @${username}, using fallback.`);
+      // If TikTok blocks us (403, Captcha, timeout), gracefully fail and use the fallback
+      res.json({
+        username: username,
+        avatar: fallbackAvatar
+      });
     }
   });
 
@@ -127,7 +100,7 @@ app.prepare().then(() => {
         avatar: userData.avatar,
         score: 0,
         isHost: true,
-        likedVideos: []
+        hasSubmittedVideos: false
       };
 
       const room: Room = {
@@ -166,11 +139,33 @@ app.prepare().then(() => {
         avatar: userData.avatar,
         score: 0,
         isHost: false,
-        likedVideos: []
+        hasSubmittedVideos: false
       };
 
       room.players.push(player);
       socket.join(cleanCode);
+      io.to(cleanCode).emit("room-updated", room);
+    });
+
+    socket.on("submit-videos", ({ roomCode, videoUrls }: { roomCode: string, videoUrls: string[] }) => {
+      const cleanCode = roomCode.toUpperCase();
+      const room = rooms.get(cleanCode);
+      if (!room || room.status !== 'lobby') return;
+
+      const player = room.players.find(p => p.id === socket.id);
+      if (!player) return;
+
+      player.hasSubmittedVideos = true;
+
+      videoUrls.forEach((url, i) => {
+        room.videos.push({
+          id: `${socket.id}-video-${i}`,
+          url: url,
+          thumbnail: "", // Oembed or meta tags could fetch this, keeping empty for simplicity
+          correctPlayerIds: [player.id]
+        });
+      });
+
       io.to(cleanCode).emit("room-updated", room);
     });
 
@@ -179,24 +174,21 @@ app.prepare().then(() => {
       const room = rooms.get(cleanCode);
       if (!room || room.players[0].id !== socket.id) return;
 
-      room.status = 'playing';
-      room.currentVideoIndex = 0;
-
-      const totalVideosNeeded = Math.max(5, room.players.length * room.settings.videosPerPlayer);
-      room.videos = [];
-      for (let i = 0; i < totalVideosNeeded; i++) {
-        const mockVideo = MOCK_VIDEOS[i % MOCK_VIDEOS.length];
-        const video = { ...mockVideo, id: `${mockVideo.id}-${i}-${cleanCode}`, correctPlayerIds: [] as string[] };
-
-        const numLikers = Math.floor(Math.random() * Math.min(room.players.length, 2)) + 1;
-        const shuffledPlayers = [...room.players].sort(() => 0.5 - Math.random());
-        const likers = shuffledPlayers.slice(0, numLikers);
-
-        video.correctPlayerIds = likers.map(p => p.id);
-        room.videos.push(video);
+      // Check if everyone has submitted their videos
+      const allSubmitted = room.players.every(p => p.hasSubmittedVideos);
+      if (!allSubmitted) {
+         socket.emit("error", "Tous les joueurs n'ont pas encore soumis leurs vidéos !");
+         return;
       }
 
-      room.videos.sort(() => 0.5 - Math.random());
+      if (room.videos.length === 0) {
+         socket.emit("error", "Aucune vidéo n'a été soumise !");
+         return;
+      }
+
+      room.status = 'playing';
+      room.currentVideoIndex = 0;
+      room.videos.sort(() => 0.5 - Math.random()); // Shuffle the videos
       io.to(cleanCode).emit("game-started", room);
     });
 
