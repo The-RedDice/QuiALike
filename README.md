@@ -127,5 +127,46 @@ sudo ufw allow 8443
 
 Now, your application is running in the background and will stay alive even if you close the terminal!
 
-### Reverse Proxy (Optional but recommended)
-Usually, apps run on port `3000`. To access it via standard HTTP/HTTPS ports (80/443) without typing `:3000` in the URL, set up **Nginx** or **Caddy** as a reverse proxy.
+### Setup Automatic HTTPS with Caddy (Required for TikTok API)
+
+TikTok requires your application to be served over a secure **HTTPS** connection for URL verification and API callbacks. Since Node.js runs over standard HTTP, the easiest way to secure it is to install **Caddy**, which will automatically provision SSL certificates for your `nip.io` domain and route traffic to your Node app.
+
+**1. Open standard web ports (80 & 443) on Oracle:**
+Follow the steps in "1. Open Ports in Oracle Cloud" above, but change the Destination Port Range to `80,443`.
+Open these ports in Ubuntu as well:
+```bash
+sudo iptables -I INPUT 6 -m state --state NEW -p tcp -m multiport --dports 80,443 -j ACCEPT
+sudo netfilter-persistent save
+```
+
+**2. Install Caddy on Ubuntu:**
+```bash
+sudo apt install -y debian-keyring debian-archive-keyring apt-transport-https curl
+curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | sudo gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | sudo tee /etc/apt/sources.list.d/caddy-stable.list
+sudo apt update
+sudo apt install caddy
+```
+
+**3. Configure Caddy:**
+Open the Caddy configuration file:
+```bash
+sudo nano /etc/caddy/Caddyfile
+```
+Delete everything in the file and replace it with this (replace `141.145.200.136` with your actual IP, and `8443` with the port your PM2 app is running on):
+```text
+141.145.200.136.nip.io {
+    reverse_proxy localhost:8443
+}
+```
+Save the file (`Ctrl+O`, `Enter`, `Ctrl+X`).
+
+**4. Restart Caddy:**
+```bash
+sudo systemctl restart caddy
+```
+
+**5. Update TikTok Developer Portal:**
+Now, go back to the TikTok developer portal and verify your URL without any port numbers:
+`https://141.145.200.136.nip.io`
+*(Note: TikTok might take a moment to verify it now that it is successfully served over HTTPS!)*
