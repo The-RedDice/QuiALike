@@ -20,37 +20,47 @@ export default function GameBoard({ room, user, socket }: GameBoardProps) {
       results: Record<string, { targetPlayerId: string, isCorrect: boolean }>,
       correctPlayerIds: string[]
   } | null>(null);
-  const [votedCount, setVotedCount] = useState(0);
+  const [votedCount, setVotedCount] = useState(() => Object.keys(room.currentVotes || {}).length);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Track `revealed` in a ref so we can read it inside updateTimer without adding it to the dependency array
+  const revealedRef = useRef(false);
 
   const currentVideo = room.videos[room.currentVideoIndex];
 
   useEffect(() => {
-    setTimeLeft(30);
     setHasVoted(false);
     setVotedPlayerId(null);
     setRevealed(false);
+    revealedRef.current = false;
     setRevealData(null);
-    setVotedCount(0);
+    setVotedCount(Object.keys(room.currentVotes || {}).length);
+    setTimeLeft(30);
 
-    if (timerRef.current) clearInterval(timerRef.current);
+    const startTimeLocal = Date.now();
 
-    timerRef.current = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
+    const updateTimer = () => {
+      // Use local relative timer to avoid client-server clock skew issues.
+      // The game loop relies on the client tracking elapsed time locally from the moment they receive the event.
+      const elapsed = Math.floor((Date.now() - startTimeLocal) / 1000);
+      const remaining = Math.max(0, 30 - elapsed);
+      setTimeLeft(remaining);
+
+      if (remaining === 0) {
           clearInterval(timerRef.current!);
-          if (user.isHost && !revealed) {
+          if (user.isHost && !revealedRef.current) {
               socket.emit("reveal-results", room.code);
           }
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
+      }
+    };
+
+    if (timerRef.current) clearInterval(timerRef.current);
+    timerRef.current = setInterval(updateTimer, 1000);
 
     const handleResultsRevealed = (data: { results: Record<string, { targetPlayerId: string, isCorrect: boolean }>, correctPlayerIds: string[] }) => {
       setRevealData(data);
       setRevealed(true);
+      revealedRef.current = true;
       if (timerRef.current) clearInterval(timerRef.current);
     };
 
@@ -66,14 +76,17 @@ export default function GameBoard({ room, user, socket }: GameBoardProps) {
       socket.off("results-revealed", handleResultsRevealed);
       socket.off("player-voted", handlePlayerVoted);
     };
-  }, [room.currentVideoIndex, socket, user.isHost, room.code, revealed]);
+  }, [room.currentVideoIndex, socket, user.isHost, room.code, room.videoStartTime]); // Removed 'revealed' from dependencies to prevent infinite loops
 
   const submitVote = (targetPlayerId: string) => {
     if (hasVoted || timeLeft === 0 || revealed) return;
 
     setHasVoted(true);
     setVotedPlayerId(targetPlayerId);
-    socket.emit("submit-vote", { roomCode: room.code, targetPlayerId });
+
+    // Pass local estimation of time taken, but server will verify against videoStartTime
+    const timeTaken = room.videoStartTime ? Date.now() - room.videoStartTime : (30 - timeLeft) * 1000;
+    socket.emit("submit-vote", { roomCode: room.code, targetPlayerId, timeTaken });
   };
 
   const nextVideo = () => {
@@ -128,16 +141,28 @@ export default function GameBoard({ room, user, socket }: GameBoardProps) {
     <div className="flex flex-col lg:flex-row items-center justify-center min-h-screen p-4 gap-12 bg-white text-gray-900 overflow-hidden">
       {/* Video Section */}
       <div className="relative w-full max-w-[320px] aspect-[9/16] bg-black rounded-[2.5rem] overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.2)] border-[10px] border-gray-900 group">
-        <video
-          key={currentVideo.url}
-          src={currentVideo.url}
-          className="w-full h-full object-cover"
-          autoPlay
-          loop
-          playsInline
-        />
+        {currentVideo.videoId ? (
+            <iframe
+              key={currentVideo.videoId}
+              src={`https://www.tiktok.com/embed/v2/${currentVideo.videoId}`}
+              className="w-full h-full border-0 pointer-events-auto"
+              allow="autoplay; fullscreen"
+            />
+        ) : (
+            <video
+              key={currentVideo.url}
+              src={currentVideo.url}
+              className="w-full h-full object-cover"
+              autoPlay
+              loop
+              playsInline
+            />
+        )}
 
-        <div className="absolute bottom-0 left-0 h-1.5 bg-white/20 w-full">
+        {/* Transparent overlay allowing clicks to pass through so the user can interact (e.g. click to play TikTok iframe) */}
+        <div className="absolute inset-0 z-10 pointer-events-none"></div>
+
+        <div className="absolute bottom-0 left-0 h-1.5 bg-white/20 w-full z-20">
             <div
                 className="h-full bg-white transition-all duration-1000 ease-linear"
                 style={{ width: revealed ? '0%' : `${(timeLeft / 30) * 100}%` }}
