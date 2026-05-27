@@ -5,37 +5,20 @@ TikTok Guesser is a multiplayer party game where you and your friends guess who 
 ## How to Play
 
 1. **Go to the site**: Visit the deployed application URL.
-2. **Log in with TikTok**: Click the "Se connecter avec TikTok" button. This redirects you to TikTok to authorize the app. Once authorized, it retrieves your actual TikTok username and profile picture.
-3. **Create or Join a Room**:
+2. **Log in**: Enter your TikTok username. The game will attempt to fetch your profile picture automatically!
+3. **Submit Videos**: Once in a lobby, submit the URLs of TikTok videos you've recently liked.
+4. **Create or Join a Room**:
    - **Host**: Click "Créer une partie" to generate a unique room code.
    - **Player**: Enter the room code provided by the host and click "Rejoindre".
-4. **Play**: Once all players have joined, the host can start the game!
+5. **Play**: Once all players have joined and submitted their videos, the host can start the game!
 
 ## Setup Instructions
 
-### 1. TikTok Developer App Setup
-
-To enable real TikTok authentication, you need to create an application on the TikTok Developer Portal:
-
-1. Go to [TikTok for Developers](https://developers.tiktok.com/) and log in.
-2. Navigate to "My Apps" and click "Create an App".
-3. Choose "Web" as your platform.
-4. Fill in the required details (App Name, Icon, Description).
-5. In the **Redirect Domain** and **Redirect URI** sections, add your application's URLs:
-   - For local development: `http://localhost:3000/api/auth/tiktok/callback`
-   - For production: `https://your-domain.com/api/auth/tiktok/callback`
-6. Make sure to request the `user.info.basic` scope.
-7. Once your app is created, copy the **Client Key** and **Client Secret**.
-
-### 2. Environment Variables
+### Environment Variables
 
 Create a `.env` file in the root of your project and add the following:
 
 ```env
-TIKTOK_CLIENT_KEY=your_tiktok_client_key
-TIKTOK_CLIENT_SECRET=your_tiktok_client_secret
-# Use your production domain when deploying, e.g., https://my-game.com/api/auth/tiktok/callback
-TIKTOK_REDIRECT_URI=http://localhost:3000/api/auth/tiktok/callback
 # Optionnel : changer le port (3000 par défaut)
 PORT=3000
 # Optionnel : changer le nom d'hôte affiché dans l'application (localhost par défaut).
@@ -44,7 +27,7 @@ PORT=3000
 SERVER_IP=localhost
 ```
 
-### 3. Local Development
+### Local Development
 
 Install dependencies and start the development server:
 
@@ -98,7 +81,7 @@ sudo ufw allow 8443
    ```
 
 2. **Configure environment variables**:
-   Create a `.env` file and add your TikTok credentials and production callback URL:
+   Create a `.env` file and set your configuration (see Environment Variables section):
    ```bash
    nano .env
    ```

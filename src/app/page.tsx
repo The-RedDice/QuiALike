@@ -109,6 +109,9 @@ export default function Home() {
   }
 
   if (room) {
+    const allSubmitted = room.players.every(p => p.hasSubmittedVideos);
+    const iHaveSubmitted = user?.hasSubmittedVideos;
+
     return (
       <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-gray-50 text-gray-900">
         <div className="w-full max-w-md bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
@@ -126,15 +129,53 @@ export default function Home() {
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={p.avatar} alt={p.username} className="w-12 h-12 rounded-full ring-2 ring-white" />
                 <span className="font-bold text-lg">{p.username} {p.id === socket.id && "(Toi)"}</span>
-                {p.isHost && <span className="ml-auto text-[10px] bg-black text-white px-2 py-1 rounded-lg font-black uppercase">Host</span>}
+                <div className="ml-auto flex items-center gap-2">
+                  {p.hasSubmittedVideos && <span className="text-[10px] bg-green-500 text-white px-2 py-1 rounded-lg font-black uppercase">Vidéos OK</span>}
+                  {p.isHost && <span className="text-[10px] bg-black text-white px-2 py-1 rounded-lg font-black uppercase">Host</span>}
+                </div>
               </div>
             ))}
           </div>
 
+          {!iHaveSubmitted ? (
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                const formData = new FormData(e.currentTarget);
+                const urls = [formData.get('url1') as string, formData.get('url2') as string].filter(Boolean);
+                if (urls.length > 0 && socket) {
+                  socket.emit("submit-videos", { roomCode: room.code, videoUrls: urls });
+                }
+              }}
+              className="space-y-4 mb-8 p-4 border-2 border-[#fe2c55]/20 bg-[#fe2c55]/5 rounded-2xl"
+            >
+              <h3 className="font-black text-sm uppercase text-[#fe2c55]">Soumettre vos vidéos</h3>
+              <p className="text-xs text-gray-500 font-medium mb-2">Collez les liens de 2 TikToks que vous avez likés récemment :</p>
+              <input name="url1" type="url" required placeholder="Lien TikTok 1" className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#fe2c55]/20 focus:border-[#fe2c55] outline-none text-sm" />
+              <input name="url2" type="url" placeholder="Lien TikTok 2 (Optionnel)" className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#fe2c55]/20 focus:border-[#fe2c55] outline-none text-sm" />
+              <button type="submit" className="w-full py-3 bg-[#fe2c55] text-white rounded-xl font-bold hover:opacity-90 active:scale-[0.98] transition-all">Valider mes vidéos</button>
+            </form>
+          ) : (
+            <div className="mb-8 p-4 bg-green-50 border border-green-100 text-green-700 rounded-2xl text-center font-bold text-sm">
+              ✅ Vos vidéos sont prêtes !
+            </div>
+          )}
+
+          {error && (
+            <div className="mb-4 text-center text-red-500 font-bold text-sm animate-bounce">
+              {error}
+            </div>
+          )}
+
           {user?.isHost ? (
             <button
               onClick={startGame}
-              className="w-full py-5 bg-black text-white rounded-2xl font-black text-lg hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-black/10 flex items-center justify-center gap-3"
+              disabled={!allSubmitted}
+              className={`w-full py-5 rounded-2xl font-black text-lg transition-all flex items-center justify-center gap-3 ${
+                allSubmitted
+                  ? "bg-black text-white hover:scale-[1.02] active:scale-[0.98] shadow-xl shadow-black/10"
+                  : "bg-gray-200 text-gray-400 cursor-not-allowed"
+              }`}
             >
               <Play size={20} fill="currentColor" />
               LANCER LA PARTIE
@@ -160,7 +201,10 @@ export default function Home() {
 
         {!isLoggedIn ? (
           <div className="bg-gray-50 p-8 rounded-[2.5rem] border border-gray-100">
-            <TikTokLogin />
+            <TikTokLogin onLogin={(username, avatar) => {
+              setProfile({ username, avatar });
+              setIsLoggedIn(true);
+            }} />
           </div>
         ) : (
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">

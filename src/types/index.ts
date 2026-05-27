@@ -4,7 +4,7 @@ export interface Player {
   avatar: string;
   score: number;
   isHost: boolean;
-  likedVideos: string[]; // List of video IDs the player "liked" (simulated)
+  hasSubmittedVideos: boolean;
 }
 
 export interface Room {
