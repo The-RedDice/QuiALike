@@ -95,7 +95,8 @@ app.prepare().then(() => {
       console.log("Create room requested by:", userData.username);
       const roomCode = nanoid(6).toUpperCase();
       const host: Player = {
-        id: socket.id,
+        id: userData.username, // Stable ID
+        socketId: socket.id,
         username: userData.username,
         avatar: userData.avatar,
         score: 0,
@@ -129,28 +130,48 @@ app.prepare().then(() => {
         return;
       }
 
-      if (room.status !== 'lobby') {
-        socket.emit("error", "La partie a déjà commencé");
-        return;
-      }
-
       // Check if player already exists in the room
       const existingPlayer = room.players.find(p => p.username === userData.username);
 
       if (existingPlayer) {
           // Reconnect logic: update their socket ID
-          existingPlayer.id = socket.id;
-      } else {
-          const player: Player = {
-            id: socket.id,
-            username: userData.username,
-            avatar: userData.avatar,
-            score: 0,
-            isHost: false,
-            hasSubmittedVideos: false
-          };
-          room.players.push(player);
+          existingPlayer.socketId = socket.id;
+          existingPlayer.offline = false;
+          socket.join(cleanCode);
+
+          // If the game has already started, emit the current state directly to the reconnecting player
+          if (room.status === 'playing') {
+             socket.emit("game-started", room);
+          } else if (room.status === 'results') {
+             socket.emit("game-started", room);
+             socket.emit("results-revealed", {
+                 results: room.currentVotes,
+                 correctPlayerIds: room.videos[room.currentVideoIndex].correctPlayerIds,
+                 players: room.players
+             });
+          } else if (room.status === 'ended') {
+             socket.emit("game-ended", room);
+          }
+
+          io.to(cleanCode).emit("room-updated", room);
+          return;
       }
+
+      if (room.status !== 'lobby') {
+        socket.emit("error", "La partie a déjà commencé");
+        return;
+      }
+
+      const player: Player = {
+        id: userData.username,
+        socketId: socket.id,
+        username: userData.username,
+        avatar: userData.avatar,
+        score: 0,
+        isHost: false,
+        hasSubmittedVideos: false
+      };
+      room.players.push(player);
 
       socket.join(cleanCode);
       io.to(cleanCode).emit("room-updated", room);
@@ -161,7 +182,7 @@ app.prepare().then(() => {
       const room = rooms.get(cleanCode);
       if (!room || room.status !== 'lobby') return;
 
-      const player = room.players.find(p => p.id === socket.id);
+      const player = room.players.find(p => p.socketId === socket.id);
       if (!player) return;
 
       player.hasSubmittedVideos = true;
@@ -234,22 +255,22 @@ app.prepare().then(() => {
       const room = rooms.get(cleanCode);
       if (!room || room.status !== 'playing') return;
 
+      const votingPlayer = room.players.find(p => p.socketId === socket.id);
+      if (!votingPlayer) return;
+
       const currentVideo = room.videos[room.currentVideoIndex];
       const isCorrect = currentVideo.correctPlayerIds.includes(targetPlayerId);
 
       // Calculate server-authoritative time if not perfectly provided
       const actualTimeTaken = room.videoStartTime ? Date.now() - room.videoStartTime : timeTaken;
 
-      // Save the vote
-      room.currentVotes[socket.id] = { targetPlayerId, isCorrect, timeTaken: actualTimeTaken };
+      // Save the vote using stable player ID
+      room.currentVotes[votingPlayer.id] = { targetPlayerId, isCorrect, timeTaken: actualTimeTaken };
 
       if (isCorrect) {
-        const player = room.players.find(p => p.id === socket.id);
-        if (player) {
-          // Score based on speed (max 1000 points, min 100)
-          const points = Math.max(100, Math.floor(1000 * (1 - actualTimeTaken / 30000)));
-          player.score += points;
-        }
+        // Score based on speed (max 1000 points, min 100)
+        const points = Math.max(100, Math.floor(1000 * (1 - actualTimeTaken / 30000)));
+        votingPlayer.score += points;
       }
 
       // Notify others that someone voted to show loader/count
@@ -281,12 +302,15 @@ app.prepare().then(() => {
     socket.on("next-video", (roomCode: string) => {
       const cleanCode = roomCode.toUpperCase();
       const room = rooms.get(cleanCode);
-      if (!room || room.players[0].id !== socket.id) return;
+      if (!room || room.players[0].socketId !== socket.id) return;
 
       if (room.currentVideoIndex < room.videos.length - 1) {
         room.currentVideoIndex++;
         room.currentVotes = {};
         room.videoStartTime = Date.now();
+        room.status = 'playing'; // explicitly set to playing for next round sync
+        // Emit full room-updated to ensure currentVotes state is synced across clients
+        io.to(cleanCode).emit("room-updated", room);
         io.to(cleanCode).emit("next-video", { currentVideoIndex: room.currentVideoIndex, videoStartTime: room.videoStartTime });
       } else {
         room.status = 'results';
@@ -296,17 +320,15 @@ app.prepare().then(() => {
 
     socket.on("disconnect", () => {
       rooms.forEach((room, roomCode) => {
-        const playerIndex = room.players.findIndex(p => p.id === socket.id);
-        if (playerIndex !== -1) {
-          room.players.splice(playerIndex, 1);
-          if (room.players.length === 0) {
-            rooms.delete(roomCode);
-          } else {
-            if (playerIndex === 0) {
-              room.players[0].isHost = true;
-            }
-            io.to(roomCode).emit("room-updated", room);
+        const player = room.players.find(p => p.socketId === socket.id);
+        if (player) {
+          player.offline = true;
+          // Check if EVERYONE is offline
+          const allOffline = room.players.every(p => p.offline);
+          if (allOffline) {
+            // Keep room alive momentarily for refresh/reconnect
           }
+          io.to(roomCode).emit("room-updated", room);
         }
       });
     });

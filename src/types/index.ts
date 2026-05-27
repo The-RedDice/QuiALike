@@ -1,10 +1,12 @@
 export interface Player {
   id: string;
+  socketId: string;
   username: string;
   avatar: string;
   score: number;
   isHost: boolean;
   hasSubmittedVideos: boolean;
+  offline?: boolean;
 }
 
 export interface Room {
