@@ -12,9 +12,13 @@ import cookieParser from "cookie-parser";
 dotenv.config();
 
 const dev = process.env.NODE_ENV !== "production";
-const hostname = process.env.SERVER_IP || "localhost";
+const publicHostname = process.env.SERVER_IP || "localhost";
+// Always use 0.0.0.0 internally to bypass NAT restrictions on VPS (like Oracle Cloud)
+// Next.js will use this internally, and we also pass it to our custom server.listen.
+const bindHostname = "0.0.0.0";
 const port = parseInt(process.env.PORT || "3000", 10);
-const app = next({ dev, hostname, port });
+
+const app = next({ dev, hostname: bindHostname, port });
 const handle = app.getRequestHandler();
 
 const MOCK_VIDEOS: Video[] = [
@@ -247,9 +251,8 @@ app.prepare().then(() => {
   });
 
   // Always bind to 0.0.0.0 so that it works behind NAT on Oracle VPS
-  // The Next.js app knows its hostname for rendering, but the server needs to listen on all interfaces
-  server.listen(port, "0.0.0.0", () => {
-    console.log(`> Ready on http://${hostname}:${port}`);
-    console.log(`> Listening on all interfaces (0.0.0.0:${port})`);
+  server.listen(port, bindHostname, () => {
+    console.log(`> Ready on http://${publicHostname}:${port}`);
+    console.log(`> Listening internally on all interfaces (${bindHostname}:${port})`);
   });
 });
