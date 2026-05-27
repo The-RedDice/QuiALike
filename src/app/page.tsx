@@ -266,16 +266,28 @@ export default function Home() {
   }
 
   return (
-    <main className="flex flex-col items-center justify-center min-h-screen p-4 bg-white text-gray-900">
-      <div className="w-full max-w-sm space-y-12">
-        <div className="text-center">
-          <div className="inline-block px-3 py-1 bg-gray-100 rounded-full text-[10px] font-black tracking-widest uppercase mb-4">Beta v0.1</div>
-          <h1 className="text-5xl font-black italic tracking-tighter mb-2 leading-none">TIKTOK<br/>GUESSER</h1>
-          <p className="text-gray-400 font-medium mt-4">Devinez qui parmi vos amis a liké ces vidéos.</p>
+    <main className="flex flex-col items-center justify-center min-h-screen p-4 bg-white text-gray-900 overflow-hidden relative">
+      {/* Decorative background blurs */}
+      <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-[#00f2fe]/10 rounded-full blur-[100px] pointer-events-none"></div>
+      <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-[#fe2c55]/10 rounded-full blur-[100px] pointer-events-none"></div>
+
+      <div className="w-full max-w-sm space-y-12 relative z-10">
+        <div className="text-center relative">
+          <div className="inline-block px-4 py-1.5 bg-gradient-to-r from-[#00f2fe]/10 to-[#fe2c55]/10 border border-[#00f2fe]/20 rounded-full text-[10px] font-black tracking-widest uppercase mb-6 text-gray-600 shadow-sm">
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#00f2fe] to-[#fe2c55]">Beta v0.1</span>
+          </div>
+          <h1 className="text-6xl font-black italic tracking-tighter mb-2 leading-none relative inline-block">
+            <span className="absolute -inset-2 bg-gradient-to-r from-[#00f2fe]/20 to-[#fe2c55]/20 blur-2xl -z-10 rounded-full"></span>
+            <span className="text-black">TIKTOK</span><br/>
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#00f2fe] to-[#fe2c55]">GUESSER</span>
+          </h1>
+          <p className="text-gray-500 font-medium mt-4 text-sm max-w-[250px] mx-auto leading-relaxed">
+            Devinez qui parmi vos amis a liké ces vidéos.
+          </p>
         </div>
 
         {!isLoggedIn ? (
-          <div className="bg-gray-50 p-8 rounded-[2.5rem] border border-gray-100">
+          <div className="bg-white/60 backdrop-blur-xl p-8 rounded-[3rem] border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
             <TikTokLogin onLogin={(username, avatar) => {
               setProfile({ username, avatar });
               setIsLoggedIn(true);
@@ -283,61 +295,69 @@ export default function Home() {
           </div>
         ) : (
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-             <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl mb-8 border border-gray-100">
+             <div className="flex items-center gap-4 p-5 bg-white/80 backdrop-blur-md rounded-[2rem] mb-8 border border-gray-100 shadow-sm hover:shadow-md transition-shadow group">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={profile.avatar} alt={profile.username} className="w-14 h-14 rounded-full ring-4 ring-white" />
-                <div>
-                    <p className="text-xs font-bold text-gray-400 uppercase">Connecté en tant que</p>
-                    <p className="text-xl font-black">@{profile.username}</p>
+                <img src={profile.avatar} alt={profile.username} className="w-16 h-16 rounded-full ring-4 ring-[#00f2fe]/20 group-hover:ring-[#00f2fe]/40 transition-all" />
+                <div className="flex-1">
+                    <p className="text-[10px] font-black tracking-widest text-[#00f2fe] uppercase mb-0.5">Connecté</p>
+                    <p className="text-xl font-black text-gray-900 truncate">@{profile.username}</p>
                 </div>
-                <button onClick={handleLogout} className="ml-auto text-xs font-bold text-gray-400 hover:text-black">Changer</button>
+                <button onClick={handleLogout} className="w-10 h-10 rounded-full bg-gray-50 hover:bg-[#fe2c55]/10 flex items-center justify-center text-gray-400 hover:text-[#fe2c55] transition-colors" title="Se déconnecter">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                </button>
              </div>
 
-            <div className="space-y-3">
+            <div className="space-y-4">
                 <button
                 onClick={createRoom}
-                className="w-full py-5 bg-black text-white rounded-2xl font-black text-lg hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-black/10"
+                className="relative w-full overflow-hidden group py-5 rounded-[2rem] font-black text-xl tracking-wide transition-all shadow-xl shadow-black/10 hover:shadow-2xl hover:shadow-[#00f2fe]/20 bg-black text-white hover:scale-[1.02] active:scale-[0.98]"
                 >
-                Créer une partie
+                  <div className="absolute inset-0 bg-gradient-to-r from-[#00f2fe]/20 to-[#fe2c55]/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                  <div className="relative z-10 flex items-center justify-center gap-2">
+                    CRÉER UNE PARTIE
+                  </div>
                 </button>
 
-                <div className="relative py-4">
-                <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-gray-100"></div>
-                </div>
-                <div className="relative flex justify-center text-[10px] uppercase">
-                    <span className="bg-white px-4 text-gray-300 font-black tracking-widest">ou rejoindre</span>
-                </div>
+                <div className="relative py-2">
+                  <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-gray-100"></div>
+                  </div>
+                  <div className="relative flex justify-center text-[10px] uppercase">
+                      <span className="bg-white/80 backdrop-blur-sm px-4 text-gray-400 font-black tracking-widest">ou rejoindre</span>
+                  </div>
                 </div>
 
-                <div className="space-y-3">
-                <input
-                    type="text"
-                    placeholder="CODE"
-                    className="w-full p-5 rounded-2xl bg-gray-50 border border-gray-100 focus:ring-2 focus:ring-black outline-none transition-all text-center font-black text-2xl tracking-[0.5em] uppercase placeholder:tracking-normal placeholder:text-sm placeholder:font-bold"
-                    value={roomCode}
-                    onChange={(e) => setRoomCode(e.target.value)}
-                />
-                <button
-                    onClick={joinRoom}
-                    className="w-full py-5 bg-white text-black border-2 border-black rounded-2xl font-black text-lg hover:bg-gray-50 active:scale-[0.98] transition-all"
-                >
-                    Rejoindre
-                </button>
+                <div className="space-y-3 bg-white/60 backdrop-blur-xl p-4 rounded-[2rem] border border-gray-100 shadow-sm">
+                  <input
+                      type="text"
+                      placeholder="CODE"
+                      className="w-full p-4 rounded-[1.5rem] bg-gray-50 border-2 border-transparent focus:border-[#00f2fe]/30 focus:bg-white outline-none transition-all text-center font-black text-2xl tracking-[0.5em] uppercase placeholder:tracking-normal placeholder:text-sm placeholder:font-bold text-gray-900"
+                      value={roomCode}
+                      onChange={(e) => setRoomCode(e.target.value)}
+                  />
+                  <button
+                      onClick={joinRoom}
+                      className="w-full py-4 bg-white text-black border-2 border-black rounded-[1.5rem] font-black text-lg hover:bg-gray-50 hover:border-gray-900 active:scale-[0.98] transition-all"
+                  >
+                      REJOINDRE
+                  </button>
                 </div>
             </div>
           </div>
         )}
 
         {error && (
-          <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-red-500 text-white px-6 py-3 rounded-full font-bold shadow-lg animate-in slide-in-from-bottom-8 duration-300">
+          <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-[#fe2c55] text-white px-6 py-3 rounded-full font-bold shadow-xl shadow-[#fe2c55]/20 animate-in slide-in-from-bottom-8 duration-300 z-50">
             {error}
           </div>
         )}
 
-        <div className="flex justify-center items-center gap-2">
-           <div className={`w-2 h-2 rounded-full ${connected ? 'bg-green-500' : 'bg-red-500'}`}></div>
-           <span className="text-[10px] uppercase font-black tracking-widest text-gray-300">
+        <div className="flex justify-center items-center gap-2 pt-4">
+           <div className="relative flex items-center justify-center">
+             <div className={`absolute w-3 h-3 rounded-full ${connected ? 'bg-green-400' : 'bg-red-400'} animate-ping opacity-75`}></div>
+             <div className={`w-2 h-2 rounded-full relative z-10 ${connected ? 'bg-green-500' : 'bg-red-500'}`}></div>
+           </div>
+           <span className="text-[10px] uppercase font-black tracking-widest text-gray-400">
              {connected ? 'Serveur en ligne' : 'Serveur hors ligne'}
            </span>
         </div>
