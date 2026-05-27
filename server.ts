@@ -134,16 +134,24 @@ app.prepare().then(() => {
         return;
       }
 
-      const player: Player = {
-        id: socket.id,
-        username: userData.username,
-        avatar: userData.avatar,
-        score: 0,
-        isHost: false,
-        hasSubmittedVideos: false
-      };
+      // Check if player already exists in the room
+      const existingPlayer = room.players.find(p => p.username === userData.username);
 
-      room.players.push(player);
+      if (existingPlayer) {
+          // Reconnect logic: update their socket ID
+          existingPlayer.id = socket.id;
+      } else {
+          const player: Player = {
+            id: socket.id,
+            username: userData.username,
+            avatar: userData.avatar,
+            score: 0,
+            isHost: false,
+            hasSubmittedVideos: false
+          };
+          room.players.push(player);
+      }
+
       socket.join(cleanCode);
       io.to(cleanCode).emit("room-updated", room);
     });

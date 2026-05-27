@@ -46,7 +46,9 @@ export default function Home() {
 
     socket.on("room-updated", (updatedRoom: Room) => {
       setRoom(updatedRoom);
-      const me = updatedRoom.players.find(p => p.id === socket.id);
+      // Use profile.username instead of socket.id because socket.id can change on reconnect,
+      // and within this useEffect closure, socket.id might be stale.
+      const me = updatedRoom.players.find(p => p.username === profile.username);
       if (me) setUser(me);
     });
 
@@ -82,7 +84,7 @@ export default function Home() {
       socket.off("game-ended");
       socket.off("results-revealed");
     };
-  }, [socket]);
+  }, [socket, profile.username]);
 
   const handleLogout = () => {
     setIsLoggedIn(false);
@@ -130,7 +132,7 @@ export default function Home() {
               <div key={p.id} className="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl border border-transparent hover:border-gray-200 transition-all">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={p.avatar} alt={p.username} className="w-12 h-12 rounded-full ring-2 ring-white" />
-                <span className="font-bold text-lg">{p.username} {p.id === socket.id && "(Toi)"}</span>
+                <span className="font-bold text-lg">{p.username} {p.username === profile.username && "(Toi)"}</span>
                 <div className="ml-auto flex items-center gap-2">
                   {p.hasSubmittedVideos && <span className="text-[10px] bg-green-500 text-white px-2 py-1 rounded-lg font-black uppercase">Vidéos OK</span>}
                   {p.isHost && <span className="text-[10px] bg-black text-white px-2 py-1 rounded-lg font-black uppercase">Host</span>}
