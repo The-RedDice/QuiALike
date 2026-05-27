@@ -17,43 +17,48 @@ export default function Home() {
   const [profile, setProfile] = useState({ username: "", avatar: "" });
 
   useEffect(() => {
-    // Check for TikTok profile cookie
-    const checkTikTokCookie = () => {
-      const match = document.cookie.match(new RegExp('(^| )tiktok_profile=([^;]+)'));
-      if (match) {
-        try {
-          const profileData = JSON.parse(decodeURIComponent(match[2]));
-          setProfile(profileData);
-          setIsLoggedIn(true);
-          // Optional: Clear the cookie after reading if you want to rely on state,
-          // but keeping it allows for persistent login across refreshes.
-        } catch (e) {
-          console.error("Failed to parse TikTok profile cookie", e);
+    // Check for TikTok profile cookie on mount
+    const match = document.cookie.match(new RegExp('(^| )tiktok_profile=([^;]+)'));
+    if (match) {
+      try {
+        const profileData = JSON.parse(decodeURIComponent(match[2]));
+        if (profileData.username !== profile.username) {
+            setProfile(profileData);
+            setIsLoggedIn(true);
         }
+      } catch (e) {
+        console.error("Failed to parse TikTok profile cookie", e);
       }
-    };
-
-    checkTikTokCookie();
-  }, []);
+    }
+  }, [profile.username]);
 
   useEffect(() => {
-    if (!socket) return;
+    if (!socket || !profile.username) return;
 
-    // Attempt auto-rejoin on connect if we were already in a room
+    // Attempt auto-rejoin on connect using sessionStorage for hard-refreshes
     const handleConnect = () => {
-        if (room && profile.username) {
+        const savedRoom = sessionStorage.getItem("current_room");
+        if (savedRoom) {
+            socket.emit("join-room", savedRoom, profile);
+        } else if (room) {
             socket.emit("join-room", room.code, profile);
         }
     };
 
+    if (socket.connected) {
+        handleConnect();
+    }
+
     socket.on("connect", handleConnect);
 
     socket.on("room-created", (newRoom: Room) => {
+      sessionStorage.setItem("current_room", newRoom.code);
       setRoom(newRoom);
       setUser(newRoom.players[0]);
     });
 
     socket.on("room-updated", (updatedRoom: Room) => {
+      sessionStorage.setItem("current_room", updatedRoom.code);
       setRoom(updatedRoom);
       // Use profile.username instead of socket.id because socket.id can change on reconnect,
       // and within this useEffect closure, socket.id might be stale.
@@ -75,6 +80,7 @@ export default function Home() {
     });
 
     socket.on("game-ended", (endedRoom: Room) => {
+        sessionStorage.removeItem("current_room");
         setRoom(endedRoom);
     });
 
@@ -98,6 +104,7 @@ export default function Home() {
 
   const handleLogout = () => {
     setIsLoggedIn(false);
+    sessionStorage.removeItem("current_room");
     document.cookie = "tiktok_profile=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
   };
 
