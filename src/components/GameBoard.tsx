@@ -13,49 +13,66 @@ interface GameBoardProps {
 
 export default function GameBoard({ room, user, socket }: GameBoardProps) {
   const [timeLeft, setTimeLeft] = useState(30);
-  const [hasVoted, setHasVoted] = useState(false);
-  const [votedPlayerId, setVotedPlayerId] = useState<string | null>(null);
-  const [revealed, setRevealed] = useState(false);
+  const currentVideo = room.videos[room.currentVideoIndex];
+
+  // Initialize state based on whether we are reconnecting mid-results
+  const isResultsPhase = room.status === 'results';
+
+  const [hasVoted, setHasVoted] = useState(() => !!room.currentVotes?.[user.id]);
+  const [votedPlayerId, setVotedPlayerId] = useState<string | null>(() => room.currentVotes?.[user.id]?.targetPlayerId || null);
+  const [revealed, setRevealed] = useState(isResultsPhase);
   const [revealData, setRevealData] = useState<{
       results: Record<string, { targetPlayerId: string, isCorrect: boolean }>,
       correctPlayerIds: string[]
-  } | null>(null);
+  } | null>(() => isResultsPhase ? { results: room.currentVotes, correctPlayerIds: currentVideo.correctPlayerIds } : null);
   const [votedCount, setVotedCount] = useState(() => Object.keys(room.currentVotes || {}).length);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Track `revealed` in a ref so we can read it inside updateTimer without adding it to the dependency array
-  const revealedRef = useRef(false);
-
-  const currentVideo = room.videos[room.currentVideoIndex];
+  const revealedRef = useRef(isResultsPhase);
 
   useEffect(() => {
-    setHasVoted(false);
-    setVotedPlayerId(null);
-    setRevealed(false);
-    revealedRef.current = false;
-    setRevealData(null);
-    setVotedCount(Object.keys(room.currentVotes || {}).length);
-    setTimeLeft(30);
+    // Only reset state if the game transitions back to playing (next video)
+    // Avoid overwriting state if we are just receiving a late reconnection in results phase
+    if (room.status === 'playing') {
+      setHasVoted(!!room.currentVotes?.[user.id]);
+      setVotedPlayerId(room.currentVotes?.[user.id]?.targetPlayerId || null);
+      setRevealed(false);
+      revealedRef.current = false;
+      setRevealData(null);
+      setVotedCount(Object.keys(room.currentVotes || {}).length);
+      setTimeLeft(30);
+    } else if (room.status === 'results') {
+      setHasVoted(true);
+      setRevealed(true);
+      revealedRef.current = true;
+      setRevealData({
+         results: room.currentVotes,
+         correctPlayerIds: currentVideo.correctPlayerIds
+      });
+      setTimeLeft(0);
+    }
 
-    const startTimeLocal = Date.now();
+    if (room.status === 'playing') {
+        // Purely local relative timer to avoid client-server clock skew issues
+        const startTimeLocal = Date.now();
 
-    const updateTimer = () => {
-      // Use local relative timer to avoid client-server clock skew issues.
-      // The game loop relies on the client tracking elapsed time locally from the moment they receive the event.
-      const elapsed = Math.floor((Date.now() - startTimeLocal) / 1000);
-      const remaining = Math.max(0, 30 - elapsed);
-      setTimeLeft(remaining);
+        const updateTimer = () => {
+          const elapsed = Math.floor((Date.now() - startTimeLocal) / 1000);
+          const remaining = Math.max(0, 30 - elapsed);
+          setTimeLeft(remaining);
 
-      if (remaining === 0) {
-          clearInterval(timerRef.current!);
-          if (user.isHost && !revealedRef.current) {
-              socket.emit("reveal-results", room.code);
+          if (remaining === 0) {
+              clearInterval(timerRef.current!);
+              if (user.isHost && !revealedRef.current) {
+                  socket.emit("reveal-results", room.code);
+              }
           }
-      }
-    };
+        };
 
-    if (timerRef.current) clearInterval(timerRef.current);
-    timerRef.current = setInterval(updateTimer, 1000);
+        if (timerRef.current) clearInterval(timerRef.current);
+        timerRef.current = setInterval(updateTimer, 1000);
+    }
 
     const handleResultsRevealed = (data: { results: Record<string, { targetPlayerId: string, isCorrect: boolean }>, correctPlayerIds: string[] }) => {
       setRevealData(data);
