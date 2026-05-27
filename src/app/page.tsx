@@ -84,6 +84,7 @@ export default function Home() {
         setRoom(endedRoom);
     });
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     socket.on("results-revealed", (data: any) => {
         if (data && data.players) {
             setRoom(prev => prev ? { ...prev, players: data.players } : null);
@@ -135,24 +136,46 @@ export default function Home() {
 
     return (
       <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-gray-50 text-gray-900">
-        <div className="w-full max-w-md bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
-          <div className="flex justify-between items-center mb-8">
-            <h1 className="text-2xl font-bold tracking-tight text-gray-400">Salle: <span className="text-black font-black">{room.code}</span></h1>
-            <div className="flex items-center gap-2 text-sm font-bold bg-gray-100 px-3 py-1 rounded-full">
-              <Users size={14} />
-              <span>{room.players.length}</span>
+        <div className="w-full max-w-md bg-white p-8 rounded-[2.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100/50 animate-in fade-in zoom-in-95 duration-500">
+          <div className="flex justify-between items-center mb-10 relative">
+            <h1 className="text-2xl font-bold tracking-tight text-gray-400 flex flex-col leading-none">
+              <span className="text-[10px] uppercase tracking-widest mb-1 text-[#00f2fe] font-black">Salle</span>
+              <span className="text-black font-black text-3xl">{room.code}</span>
+            </h1>
+            <div className="flex items-center gap-2 text-sm font-bold bg-[#00f2fe]/10 text-[#00f2fe] px-4 py-2 rounded-2xl shadow-sm border border-[#00f2fe]/20">
+              <Users size={18} className="animate-pulse" />
+              <span className="text-lg">{room.players.length}</span>
             </div>
+
+            {/* Decorative blurs */}
+            <div className="absolute -top-10 -right-10 w-32 h-32 bg-[#00f2fe]/5 rounded-full blur-3xl pointer-events-none"></div>
+            <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-[#fe2c55]/5 rounded-full blur-3xl pointer-events-none"></div>
           </div>
 
-          <div className="space-y-3 mb-8">
-            {room.players.map((p) => (
-              <div key={p.id} className="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl border border-transparent hover:border-gray-200 transition-all">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={p.avatar} alt={p.username} className="w-12 h-12 rounded-full ring-2 ring-white" />
-                <span className="font-bold text-lg">{p.username} {p.username === profile.username && "(Toi)"}</span>
-                <div className="ml-auto flex items-center gap-2">
-                  {p.hasSubmittedVideos && <span className="text-[10px] bg-green-500 text-white px-2 py-1 rounded-lg font-black uppercase">Vidéos OK</span>}
-                  {p.isHost && <span className="text-[10px] bg-black text-white px-2 py-1 rounded-lg font-black uppercase">Host</span>}
+          <div className="space-y-4 mb-10 relative z-10">
+            {room.players.map((p, idx) => (
+              <div
+                key={p.id}
+                className="group flex items-center gap-4 p-4 bg-gray-50/80 rounded-3xl border border-transparent hover:border-[#00f2fe]/30 hover:bg-white hover:shadow-lg transition-all duration-300 animate-in slide-in-from-bottom-4"
+                style={{ animationDelay: `${idx * 100}ms` }}
+              >
+                <div className="relative">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={p.avatar} alt={p.username} className="w-14 h-14 rounded-full ring-4 ring-white shadow-sm transition-transform group-hover:scale-105" />
+                  {p.hasSubmittedVideos && (
+                    <div className="absolute -bottom-1 -right-1 bg-green-500 w-5 h-5 rounded-full border-2 border-white flex items-center justify-center shadow-md animate-in zoom-in">
+                      <span className="text-white text-[10px]">✓</span>
+                    </div>
+                  )}
+                </div>
+                <div className="flex flex-col">
+                  <span className="font-black text-lg text-gray-900 group-hover:text-black transition-colors">
+                    {p.username} {p.username === profile.username && <span className="text-gray-400 text-sm ml-1 font-medium italic">(Toi)</span>}
+                  </span>
+                  <div className="flex items-center gap-2 mt-1">
+                    {p.isHost && <span className="text-[9px] bg-black text-white px-2 py-0.5 rounded-md font-black uppercase tracking-wider">Host</span>}
+                    {!p.hasSubmittedVideos && <span className="text-[10px] text-[#fe2c55] font-bold animate-pulse">Prépare ses vidéos...</span>}
+                  </div>
                 </div>
               </div>
             ))}
@@ -165,20 +188,47 @@ export default function Home() {
                 const formData = new FormData(e.currentTarget);
                 const urls = [formData.get('url1') as string, formData.get('url2') as string].filter(Boolean);
                 if (urls.length > 0 && socket) {
-                  socket.emit("submit-videos", { roomCode: room.code, videoUrls: urls });
+                  socket.emit("submit-videos", { roomCode: room.code, videoUrls: urls, username: profile.username });
                 }
               }}
-              className="space-y-4 mb-8 p-4 border-2 border-[#fe2c55]/20 bg-[#fe2c55]/5 rounded-2xl"
+              className="relative space-y-4 mb-10 p-6 bg-gradient-to-br from-[#fe2c55]/5 to-white border-2 border-[#fe2c55]/20 rounded-[2rem] shadow-inner animate-in fade-in slide-in-from-bottom-8 duration-700"
             >
-              <h3 className="font-black text-sm uppercase text-[#fe2c55]">Soumettre vos vidéos</h3>
-              <p className="text-xs text-gray-500 font-medium mb-2">Collez les liens de 2 TikToks que vous avez likés récemment :</p>
-              <input name="url1" type="url" required placeholder="Lien TikTok 1" className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#fe2c55]/20 focus:border-[#fe2c55] outline-none text-sm" />
-              <input name="url2" type="url" placeholder="Lien TikTok 2 (Optionnel)" className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#fe2c55]/20 focus:border-[#fe2c55] outline-none text-sm" />
-              <button type="submit" className="w-full py-3 bg-[#fe2c55] text-white rounded-xl font-bold hover:opacity-90 active:scale-[0.98] transition-all">Valider mes vidéos</button>
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-8 h-8 rounded-full bg-[#fe2c55]/10 flex items-center justify-center">
+                  <span className="text-[#fe2c55] font-black">?</span>
+                </div>
+                <h3 className="font-black text-lg uppercase tracking-tight text-gray-900">Vos pépites</h3>
+              </div>
+              <p className="text-sm text-gray-500 font-medium mb-4 leading-relaxed">Collez les liens de 2 TikToks récents. <span className="text-[#fe2c55] font-bold">Plus c&apos;est gênant, plus c&apos;est drôle.</span></p>
+
+              <div className="space-y-3">
+                <div className="relative group">
+                  <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-[#00f2fe] transition-colors">
+                    <span className="font-bold text-sm">1</span>
+                  </div>
+                  <input name="url1" type="url" required placeholder="Lien TikTok..." className="w-full pl-10 pr-4 py-4 rounded-2xl bg-white border border-gray-200 focus:ring-4 focus:ring-[#00f2fe]/10 focus:border-[#00f2fe] outline-none text-sm transition-all shadow-sm" />
+                </div>
+                <div className="relative group">
+                  <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-[#00f2fe] transition-colors">
+                    <span className="font-bold text-sm">2</span>
+                  </div>
+                  <input name="url2" type="url" placeholder="Lien TikTok (Optionnel)" className="w-full pl-10 pr-4 py-4 rounded-2xl bg-white border border-gray-200 focus:ring-4 focus:ring-[#00f2fe]/10 focus:border-[#00f2fe] outline-none text-sm transition-all shadow-sm" />
+                </div>
+              </div>
+
+              <button type="submit" className="relative w-full overflow-hidden mt-6 group bg-black rounded-2xl">
+                <div className="absolute inset-0 bg-gradient-to-r from-[#00f2fe] to-[#fe2c55] opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                <div className="relative w-full py-4 text-white font-black text-lg tracking-wide hover:scale-[0.98] transition-transform flex justify-center items-center gap-2 z-10">
+                  VALIDER MES VIDÉOS
+                </div>
+              </button>
             </form>
           ) : (
-            <div className="mb-8 p-4 bg-green-50 border border-green-100 text-green-700 rounded-2xl text-center font-bold text-sm">
-              ✅ Vos vidéos sont prêtes !
+            <div className="mb-10 p-6 bg-gradient-to-br from-green-400/10 to-green-500/5 border-2 border-green-500/20 text-green-700 rounded-[2rem] text-center font-bold text-lg animate-in zoom-in-95 duration-500 shadow-sm flex flex-col items-center gap-3">
+              <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center text-white shadow-lg animate-bounce shadow-green-500/30">
+                <span className="text-xl">✓</span>
+              </div>
+              Vidéos chargées !
             </div>
           )}
 
@@ -192,17 +242,21 @@ export default function Home() {
             <button
               onClick={startGame}
               disabled={!allSubmitted}
-              className={`w-full py-5 rounded-2xl font-black text-lg transition-all flex items-center justify-center gap-3 ${
+              className={`relative w-full overflow-hidden group py-5 rounded-3xl font-black text-xl tracking-wide transition-all flex items-center justify-center gap-3 ${
                 allSubmitted
-                  ? "bg-black text-white hover:scale-[1.02] active:scale-[0.98] shadow-xl shadow-black/10"
-                  : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                  ? "bg-black text-white hover:scale-[1.02] active:scale-[0.98] shadow-2xl shadow-black/20"
+                  : "bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200"
               }`}
             >
-              <Play size={20} fill="currentColor" />
-              LANCER LA PARTIE
+              {allSubmitted && <div className="absolute inset-0 bg-gradient-to-r from-[#00f2fe]/20 to-[#fe2c55]/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>}
+              <div className="relative z-10 flex items-center gap-3">
+                <Play size={24} fill="currentColor" className={allSubmitted ? "animate-pulse" : ""} />
+                LANCER LA PARTIE
+              </div>
             </button>
           ) : (
-            <div className="text-center p-5 bg-gray-100 text-gray-500 font-bold rounded-2xl animate-pulse">
+            <div className="text-center p-6 bg-gray-50 border border-gray-100 text-gray-400 font-black tracking-widest uppercase text-sm rounded-3xl flex items-center justify-center gap-3 shadow-inner">
+              <div className="w-2 h-2 bg-[#00f2fe] rounded-full animate-ping"></div>
               En attente du host...
             </div>
           )}

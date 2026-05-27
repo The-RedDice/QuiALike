@@ -177,13 +177,20 @@ app.prepare().then(() => {
       io.to(cleanCode).emit("room-updated", room);
     });
 
-    socket.on("submit-videos", async ({ roomCode, videoUrls }: { roomCode: string, videoUrls: string[] }) => {
+    socket.on("submit-videos", async ({ roomCode, videoUrls, username }: { roomCode: string, videoUrls: string[], username: string }) => {
       const cleanCode = roomCode.toUpperCase();
       const room = rooms.get(cleanCode);
       if (!room || room.status !== 'lobby') return;
 
-      const player = room.players.find(p => p.socketId === socket.id);
-      if (!player) return;
+      // Identify player by stable username to prevent issues if socket.id is somehow mismatched on reconnect
+      const player = room.players.find(p => p.username === username);
+      if (!player) {
+         console.error("Player not found when submitting videos:", username);
+         return;
+      }
+
+      // Update their socketId just in case it was out of sync
+      player.socketId = socket.id;
 
       player.hasSubmittedVideos = true;
 
@@ -228,7 +235,7 @@ app.prepare().then(() => {
     socket.on("start-game", (roomCode: string) => {
       const cleanCode = roomCode.toUpperCase();
       const room = rooms.get(cleanCode);
-      if (!room || room.players[0].id !== socket.id) return;
+      if (!room || room.players[0].socketId !== socket.id) return;
 
       // Check if everyone has submitted their videos
       const allSubmitted = room.players.every(p => p.hasSubmittedVideos);
@@ -250,13 +257,16 @@ app.prepare().then(() => {
       io.to(cleanCode).emit("game-started", room);
     });
 
-    socket.on("submit-vote", ({ roomCode, targetPlayerId, timeTaken }: { roomCode: string, targetPlayerId: string, timeTaken: number }) => {
+    socket.on("submit-vote", ({ roomCode, targetPlayerId, timeTaken, username }: { roomCode: string, targetPlayerId: string, timeTaken: number, username: string }) => {
       const cleanCode = roomCode.toUpperCase();
       const room = rooms.get(cleanCode);
       if (!room || room.status !== 'playing') return;
 
-      const votingPlayer = room.players.find(p => p.socketId === socket.id);
+      const votingPlayer = room.players.find(p => p.username === username);
       if (!votingPlayer) return;
+
+      // Update their socketId just in case it was out of sync
+      votingPlayer.socketId = socket.id;
 
       const currentVideo = room.videos[room.currentVideoIndex];
       const isCorrect = currentVideo.correctPlayerIds.includes(targetPlayerId);

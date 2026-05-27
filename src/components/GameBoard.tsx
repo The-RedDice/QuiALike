@@ -103,7 +103,7 @@ export default function GameBoard({ room, user, socket }: GameBoardProps) {
 
     // Pass local estimation of time taken, but server will verify against videoStartTime
     const timeTaken = room.videoStartTime ? Date.now() - room.videoStartTime : (30 - timeLeft) * 1000;
-    socket.emit("submit-vote", { roomCode: room.code, targetPlayerId, timeTaken });
+    socket.emit("submit-vote", { roomCode: room.code, targetPlayerId, timeTaken, username: user.username });
   };
 
   const nextVideo = () => {
