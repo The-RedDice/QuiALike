@@ -39,6 +39,15 @@ export default function Home() {
   useEffect(() => {
     if (!socket) return;
 
+    // Attempt auto-rejoin on connect if we were already in a room
+    const handleConnect = () => {
+        if (room && profile.username) {
+            socket.emit("join-room", room.code, profile);
+        }
+    };
+
+    socket.on("connect", handleConnect);
+
     socket.on("room-created", (newRoom: Room) => {
       setRoom(newRoom);
       setUser(newRoom.players[0]);
@@ -76,6 +85,7 @@ export default function Home() {
     });
 
     return () => {
+      socket.off("connect", handleConnect);
       socket.off("room-created");
       socket.off("room-updated");
       socket.off("error");
@@ -84,7 +94,7 @@ export default function Home() {
       socket.off("game-ended");
       socket.off("results-revealed");
     };
-  }, [socket, profile.username]);
+  }, [socket, profile.username, room?.code]);
 
   const handleLogout = () => {
     setIsLoggedIn(false);
