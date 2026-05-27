@@ -111,7 +111,8 @@ app.prepare().then(() => {
         videos: [],
         settings: {
           videosPerPlayer: 2
-        }
+        },
+        currentVotes: {}
       };
 
       rooms.set(roomCode, room);
@@ -147,7 +148,7 @@ app.prepare().then(() => {
       io.to(cleanCode).emit("room-updated", room);
     });
 
-    socket.on("submit-videos", ({ roomCode, videoUrls }: { roomCode: string, videoUrls: string[] }) => {
+    socket.on("submit-videos", async ({ roomCode, videoUrls }: { roomCode: string, videoUrls: string[] }) => {
       const cleanCode = roomCode.toUpperCase();
       const room = rooms.get(cleanCode);
       if (!room || room.status !== 'lobby') return;
@@ -157,14 +158,40 @@ app.prepare().then(() => {
 
       player.hasSubmittedVideos = true;
 
-      videoUrls.forEach((url, i) => {
+      for (let i = 0; i < videoUrls.length; i++) {
+        let url = videoUrls[i];
+        let videoId: string | undefined;
+
+        // Try to extract videoId if it's a shortlink
+        if (url.includes('vm.tiktok.com') || url.includes('vt.tiktok.com')) {
+           try {
+              const res = await fetch(url, { redirect: 'manual' });
+              const location = res.headers.get('location');
+              if (location) {
+                  url = location;
+              } else if (res.url && res.url !== url) {
+                  // Fallback for some fetch implementations
+                  url = res.url;
+              }
+           } catch (e) {
+              console.warn("Failed to resolve shortlink", url, e);
+           }
+        }
+
+        // Try to extract videoId
+        const match = url.match(/video\/(\d+)/);
+        if (match && match[1]) {
+           videoId = match[1];
+        }
+
         room.videos.push({
           id: `${socket.id}-video-${i}`,
           url: url,
+          videoId,
           thumbnail: "", // Oembed or meta tags could fetch this, keeping empty for simplicity
           correctPlayerIds: [player.id]
         });
-      });
+      }
 
       io.to(cleanCode).emit("room-updated", room);
     });
@@ -189,6 +216,8 @@ app.prepare().then(() => {
       room.status = 'playing';
       room.currentVideoIndex = 0;
       room.videos.sort(() => 0.5 - Math.random()); // Shuffle the videos
+      room.currentVotes = {};
+      room.videoStartTime = Date.now();
       io.to(cleanCode).emit("game-started", room);
     });
 
@@ -200,16 +229,45 @@ app.prepare().then(() => {
       const currentVideo = room.videos[room.currentVideoIndex];
       const isCorrect = currentVideo.correctPlayerIds.includes(targetPlayerId);
 
+      // Calculate server-authoritative time if not perfectly provided
+      const actualTimeTaken = room.videoStartTime ? Date.now() - room.videoStartTime : timeTaken;
+
+      // Save the vote
+      room.currentVotes[socket.id] = { targetPlayerId, isCorrect, timeTaken: actualTimeTaken };
+
       if (isCorrect) {
         const player = room.players.find(p => p.id === socket.id);
         if (player) {
           // Score based on speed (max 1000 points, min 100)
-          const points = Math.max(100, Math.floor(1000 * (1 - timeTaken / 30000)));
+          const points = Math.max(100, Math.floor(1000 * (1 - actualTimeTaken / 30000)));
           player.score += points;
         }
       }
 
-      socket.emit("vote-result", { isCorrect, correctPlayerIds: currentVideo.correctPlayerIds });
+      // Notify others that someone voted to show loader/count
+      io.to(cleanCode).emit("player-voted");
+
+      // Check if everyone has voted
+      if (Object.keys(room.currentVotes).length === room.players.length) {
+        io.to(cleanCode).emit("results-revealed", {
+            results: room.currentVotes,
+            correctPlayerIds: currentVideo.correctPlayerIds,
+            players: room.players // Pass updated players with new scores
+        });
+      }
+    });
+
+    socket.on("reveal-results", (roomCode: string) => {
+        const cleanCode = roomCode.toUpperCase();
+        const room = rooms.get(cleanCode);
+        if (!room || room.status !== 'playing') return;
+
+        const currentVideo = room.videos[room.currentVideoIndex];
+        io.to(cleanCode).emit("results-revealed", {
+            results: room.currentVotes,
+            correctPlayerIds: currentVideo.correctPlayerIds,
+            players: room.players // Pass updated players with new scores
+        });
     });
 
     socket.on("next-video", (roomCode: string) => {
@@ -219,7 +277,9 @@ app.prepare().then(() => {
 
       if (room.currentVideoIndex < room.videos.length - 1) {
         room.currentVideoIndex++;
-        io.to(cleanCode).emit("next-video", { currentVideoIndex: room.currentVideoIndex });
+        room.currentVotes = {};
+        room.videoStartTime = Date.now();
+        io.to(cleanCode).emit("next-video", { currentVideoIndex: room.currentVideoIndex, videoStartTime: room.videoStartTime });
       } else {
         room.status = 'results';
         io.to(cleanCode).emit("game-ended", room);

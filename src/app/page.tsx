@@ -67,8 +67,10 @@ export default function Home() {
         setRoom(endedRoom);
     });
 
-    socket.on("results-revealed", ({ players }: { players: Player[] }) => {
-        setRoom(prev => prev ? { ...prev, players } : null);
+    socket.on("results-revealed", (data: any) => {
+        if (data && data.players) {
+            setRoom(prev => prev ? { ...prev, players: data.players } : null);
+        }
     });
 
     return () => {

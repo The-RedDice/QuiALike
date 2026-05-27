@@ -16,11 +16,14 @@ export interface Room {
   settings: {
     videosPerPlayer: number;
   };
+  currentVotes: Record<string, { targetPlayerId: string; isCorrect: boolean; timeTaken: number }>;
+  videoStartTime?: number;
 }
 
 export interface Video {
   id: string;
   url: string;
+  videoId?: string;
   thumbnail: string;
   correctPlayerIds: string[]; // IDs of players who liked this video
 }
