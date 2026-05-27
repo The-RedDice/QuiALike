@@ -135,12 +135,12 @@ export default function Home() {
     const iHaveSubmitted = user?.hasSubmittedVideos;
 
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-gray-50 text-[#09090b]">
+      <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-[#09090b] text-white">
         <div className="w-full max-w-md bg-[#09090b] p-8 rounded-[2.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/10/50 animate-in fade-in zoom-in-95 duration-500">
           <div className="flex justify-between items-center mb-10 relative">
             <h1 className="text-2xl font-bold tracking-tight text-gray-500 flex flex-col leading-none">
               <span className="text-[10px] uppercase tracking-widest mb-1 text-[#00f2fe] font-black">Salle</span>
-              <span className="text-[#09090b] font-black text-3xl">{room.code}</span>
+              <span className="text-white font-black text-3xl">{room.code}</span>
             </h1>
             <div className="flex items-center gap-2 text-sm font-bold bg-[#00f2fe]/10 text-[#00f2fe] px-4 py-2 rounded-2xl shadow-sm border border-[#00f2fe]/20">
               <Users size={18} className="animate-pulse" />
@@ -164,12 +164,12 @@ export default function Home() {
                   <img src={p.avatar} alt={p.username} className="w-14 h-14 rounded-full ring-4 ring-white shadow-sm transition-transform group-hover:scale-105" />
                   {p.hasSubmittedVideos && (
                     <div className="absolute -bottom-1 -right-1 bg-green-500 w-5 h-5 rounded-full border-2 border-white flex items-center justify-center shadow-md animate-in zoom-in">
-                      <span className="text-[#09090b] text-[10px]">✓</span>
+                      <span className="text-white text-[10px]">✓</span>
                     </div>
                   )}
                 </div>
                 <div className="flex flex-col">
-                  <span className="font-black text-lg text-[#09090b] group-hover:text-[#09090b] transition-colors">
+                  <span className="font-black text-lg text-white group-hover:text-white transition-colors">
                     {p.username} {p.username === profile.username && <span className="text-gray-400 text-sm ml-1 font-medium italic">(Toi)</span>}
                   </span>
                   <div className="flex items-center gap-2 mt-1">
@@ -197,7 +197,7 @@ export default function Home() {
                 <div className="w-8 h-8 rounded-full bg-[#fe2c55]/10 flex items-center justify-center">
                   <span className="text-[#fe2c55] font-black">?</span>
                 </div>
-                <h3 className="font-black text-lg uppercase tracking-tight text-[#09090b]">Vos pépites</h3>
+                <h3 className="font-black text-lg uppercase tracking-tight text-white">Vos pépites</h3>
               </div>
               <p className="text-sm text-gray-500 font-medium mb-4 leading-relaxed">Collez les liens de 2 TikToks récents. <span className="text-[#fe2c55] font-bold">Plus c&apos;est gênant, plus c&apos;est drôle.</span></p>
 
@@ -255,7 +255,7 @@ export default function Home() {
               </div>
             </button>
           ) : (
-            <div className="text-center p-6 bg-gray-50 border border-white/10 text-gray-400 font-black tracking-widest uppercase text-sm rounded-3xl flex items-center justify-center gap-3 shadow-inner">
+            <div className="text-center p-6 bg-[#09090b] border border-white/10 text-gray-400 font-black tracking-widest uppercase text-sm rounded-3xl flex items-center justify-center gap-3 shadow-inner">
               <div className="w-2 h-2 bg-[#00f2fe] rounded-full animate-ping"></div>
               En attente du host...
             </div>
@@ -266,7 +266,7 @@ export default function Home() {
   }
 
   return (
-    <main className="flex flex-col items-center justify-center min-h-screen p-4 bg-[#09090b] text-[#09090b] overflow-hidden relative">
+    <main className="flex flex-col items-center justify-center min-h-screen p-4 bg-[#09090b] text-white overflow-hidden relative">
       {/* Decorative background blurs */}
       <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-[#00f2fe]/10 rounded-full blur-[100px] pointer-events-none"></div>
       <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-[#fe2c55]/10 rounded-full blur-[100px] pointer-events-none"></div>
@@ -278,7 +278,7 @@ export default function Home() {
           </div>
           <h1 className="text-6xl font-black italic tracking-tighter mb-2 leading-none relative inline-block">
             <span className="absolute -inset-2 bg-gradient-to-r from-[#00f2fe]/20 to-[#fe2c55]/20 blur-2xl -z-10 rounded-full"></span>
-            <span className="text-[#09090b]">TIKTOK</span><br/>
+            <span className="text-white">TIKTOK</span><br/>
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#00f2fe] to-[#fe2c55]">GUESSER</span>
           </h1>
           <p className="text-gray-500 font-medium mt-4 text-sm max-w-[250px] mx-auto leading-relaxed">
@@ -300,7 +300,7 @@ export default function Home() {
                 <img src={profile.avatar} alt={profile.username} className="w-16 h-16 rounded-full ring-4 ring-[#00f2fe]/20 group-hover:ring-[#00f2fe]/40 transition-all" />
                 <div className="flex-1">
                     <p className="text-[10px] font-black tracking-widest text-[#00f2fe] uppercase mb-0.5">Connecté</p>
-                    <p className="text-xl font-black text-[#09090b] truncate">@{profile.username}</p>
+                    <p className="text-xl font-black text-white truncate">@{profile.username}</p>
                 </div>
                 <button onClick={handleLogout} className="w-10 h-10 rounded-full bg-white/5 hover:bg-[#fe2c55]/20 flex items-center justify-center text-gray-400 hover:text-[#fe2c55] transition-colors" title="Se déconnecter">
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
@@ -331,13 +331,13 @@ export default function Home() {
                   <input
                       type="text"
                       placeholder="CODE"
-                      className="w-full p-4 rounded-[1.5rem] bg-[#18181b] border-2 border-white/10 text-white focus:bg-[#18181b] focus:border-[#00f2fe]/30 focus:bg-[#09090b] outline-none transition-all text-center font-black text-2xl tracking-[0.5em] uppercase placeholder:tracking-normal placeholder:text-sm placeholder:font-bold text-[#09090b]"
+                      className="w-full p-4 rounded-[1.5rem] bg-[#18181b] border-2 border-white/10 text-white focus:bg-[#18181b] focus:border-[#00f2fe]/30 focus:bg-[#09090b] outline-none transition-all text-center font-black text-2xl tracking-[0.5em] uppercase placeholder:tracking-normal placeholder:text-sm placeholder:font-bold placeholder:text-gray-400"
                       value={roomCode}
                       onChange={(e) => setRoomCode(e.target.value)}
                   />
                   <button
                       onClick={joinRoom}
-                      className="w-full py-4 bg-[#09090b] text-[#09090b] border-2 border-black rounded-[1.5rem] font-black text-lg hover:bg-gray-50 hover:border-gray-900 active:scale-[0.98] transition-all"
+                      className="w-full py-4 bg-white text-[#09090b] border-2 border-white/10 rounded-[1.5rem] font-black text-lg hover:scale-[0.98] active:scale-[0.98] transition-all"
                   >
                       REJOINDRE
                   </button>
@@ -347,7 +347,7 @@ export default function Home() {
         )}
 
         {error && (
-          <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-[#fe2c55] text-[#09090b] px-6 py-3 rounded-full font-bold shadow-xl shadow-[#fe2c55]/20 animate-in slide-in-from-bottom-8 duration-300 z-50">
+          <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-[#fe2c55] text-white px-6 py-3 rounded-full font-bold shadow-xl shadow-[#fe2c55]/20 animate-in slide-in-from-bottom-8 duration-300 z-50">
             {error}
           </div>
         )}
