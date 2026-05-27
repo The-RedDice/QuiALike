@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Room, Player } from "@/types";
-import { Timer, CheckCircle2, XCircle, Trophy, ArrowRight, Loader2 } from "lucide-react";
+import { Timer, CheckCircle2, XCircle, Trophy, ArrowRight, Loader2, ArrowLeft } from "lucide-react";
 import { Socket } from "socket.io-client";
 
 interface GameBoardProps {
@@ -110,10 +110,25 @@ export default function GameBoard({ room, user, socket }: GameBoardProps) {
     socket.emit("next-video", room.code);
   };
 
+
+
+  const handleLeave = () => {
+    socket.emit("leave-room", room.code);
+    sessionStorage.removeItem("current_room");
+    window.location.href = '/';
+  };
+
   if (room.status === 'results') {
     const sortedPlayers = [...room.players].sort((a, b) => b.score - a.score);
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-[#09090b] text-white animate-in fade-in duration-700">
+      <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-[#09090b] text-white animate-in fade-in duration-700 relative">
+        <button
+          onClick={handleLeave}
+          className="absolute top-6 left-6 p-3 rounded-full bg-white/5 hover:bg-[#fe2c55]/20 text-gray-400 hover:text-[#fe2c55] transition-colors border border-white/10 group z-50 flex items-center gap-2"
+        >
+          <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
+          <span className="font-bold text-sm hidden sm:inline">Quitter</span>
+        </button>
         <div className="w-full max-w-md text-center">
           <div className="inline-block p-4 bg-yellow-400 rounded-full mb-6 shadow-xl shadow-yellow-200">
             <Trophy className="w-12 h-12 text-white" />
@@ -155,7 +170,14 @@ export default function GameBoard({ room, user, socket }: GameBoardProps) {
   }
 
   return (
-    <div className="flex flex-col lg:flex-row items-center justify-center min-h-screen p-4 gap-12 bg-[#09090b] text-white overflow-hidden">
+    <div className="flex flex-col lg:flex-row items-center justify-center min-h-screen p-4 gap-12 bg-[#09090b] text-white overflow-hidden relative">
+      <button
+        onClick={handleLeave}
+        className="absolute top-6 left-6 p-3 rounded-full bg-white/5 hover:bg-[#fe2c55]/20 text-gray-400 hover:text-[#fe2c55] transition-colors border border-white/10 group z-50 flex items-center gap-2"
+      >
+        <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
+        <span className="font-bold text-sm hidden sm:inline">Quitter</span>
+      </button>
       {/* Video Section */}
       <div className="relative w-full max-w-[320px] aspect-[9/16] bg-black rounded-[2.5rem] overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.2)] border-[10px] border-gray-900 group">
         {currentVideo.videoId ? (

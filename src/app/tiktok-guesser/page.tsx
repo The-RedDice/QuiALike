@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useSocket } from "@/lib/socket";
 import { Room, Player } from "@/types";
-import { Users, Play } from "lucide-react";
+import { Users, Play, ArrowLeft } from "lucide-react";
 import GameBoard from "@/components/GameBoard";
 import TikTokLogin from "@/components/TikTokLogin";
 
@@ -267,6 +267,13 @@ export default function Home() {
 
   return (
     <main className="flex flex-col items-center justify-center min-h-screen p-4 bg-[#09090b] text-white overflow-hidden relative">
+      <button
+        onClick={() => window.location.href = '/'}
+        className="absolute top-6 left-6 p-3 rounded-full bg-white/5 hover:bg-[#00f2fe]/20 text-gray-400 hover:text-[#00f2fe] transition-colors border border-white/10 group z-50 flex items-center gap-2"
+      >
+        <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
+        <span className="font-bold text-sm hidden sm:inline">Retour au Hub</span>
+      </button>
       {/* Decorative background blurs */}
       <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-[#00f2fe]/10 rounded-full blur-[100px] pointer-events-none"></div>
       <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-[#fe2c55]/10 rounded-full blur-[100px] pointer-events-none"></div>
