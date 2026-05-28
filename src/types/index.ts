@@ -12,7 +12,7 @@ export interface Player {
 export interface Room {
   code: string;
   players: Player[];
-  status: 'lobby' | 'playing' | 'results' | 'ended';
+  status: 'lobby' | 'playing' | 'results' | 'leaderboard' | 'ended';
   currentVideoIndex: number;
   videos: Video[];
   settings: {
@@ -20,6 +20,7 @@ export interface Room {
   };
   currentVotes: Record<string, { targetPlayerId: string; isCorrect: boolean; timeTaken: number }>;
   videoStartTime?: number;
+  previousScores?: Record<string, number>;
 }
 
 export interface Video {
