@@ -26,21 +26,95 @@ export default function ImitMemeBoard({ room, user, socket }: ImitMemeBoardProps
   const audioPlayerRef = useRef<HTMLAudioElement | null>(null);
   const [isPlayingRecording, setIsPlayingRecording] = useState(false);
 
+
   // States for visualizer
   const [audioLevels, setAudioLevels] = useState<number[]>(Array(20).fill(0));
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const sourceRef = useRef<MediaElementAudioSourceNode | null>(null);
+  const rafRef = useRef<number | null>(null);
 
-  // Simulated visualizer
+  // Initialize Web Audio API for real audio reactivity
+  const setupRealVisualizer = (audioElement: HTMLAudioElement) => {
+      try {
+          if (!audioContextRef.current) {
+              const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+              audioContextRef.current = new AudioContext();
+          }
+          if (audioContextRef.current.state === 'suspended') {
+              audioContextRef.current.resume();
+          }
+          if (!analyserRef.current) {
+              analyserRef.current = audioContextRef.current.createAnalyser();
+              analyserRef.current.fftSize = 64; // Small size for ~20 bars
+          }
+          // Only create source once per element
+          if (!sourceRef.current || (sourceRef.current.mediaElement !== audioElement)) {
+              if (sourceRef.current) sourceRef.current.disconnect();
+              sourceRef.current = audioContextRef.current.createMediaElementSource(audioElement);
+              sourceRef.current.connect(analyserRef.current);
+              analyserRef.current.connect(audioContextRef.current.destination);
+          }
+
+          const updateVisualizer = () => {
+              if (analyserRef.current) {
+                  const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
+                  analyserRef.current.getByteFrequencyData(dataArray);
+
+                  // Map frequencies to our 20 levels (0-100%)
+                  const step = Math.floor(dataArray.length / 20);
+                  const newLevels = Array.from({ length: 20 }, (_, i) => {
+                      let sum = 0;
+                      for (let j = 0; j < step; j++) {
+                          sum += dataArray[i * step + j];
+                      }
+                      const avg = sum / step;
+                      return (avg / 255) * 100; // Convert to percentage
+                  });
+                  setAudioLevels(newLevels);
+              }
+              rafRef.current = requestAnimationFrame(updateVisualizer);
+          };
+
+          if (rafRef.current) cancelAnimationFrame(rafRef.current);
+          updateVisualizer();
+
+      } catch (e) {
+          console.error("Visualizer setup failed:", e);
+      }
+  };
+
+  const stopRealVisualizer = () => {
+      if (rafRef.current) {
+          cancelAnimationFrame(rafRef.current);
+          rafRef.current = null;
+      }
+      setAudioLevels(Array(20).fill(0));
+  };
+
+  // Simulated visualizer for iframes (cross-origin audio can't be analyzed)
   useEffect(() => {
       let interval: NodeJS.Timeout;
-      if (room.status === 'playing_meme' || isRecording || isPlayingRecording) {
+
+      // We use simulated if playing a meme that is NOT a local file
+      const isSimulatedMeme = room.status === 'playing_meme' && !currentMeme?.fileBase64;
+
+      if (isSimulatedMeme || isRecording) {
           interval = setInterval(() => {
-              setAudioLevels(Array.from({ length: 20 }, () => Math.random() * 100));
+              // Less chaotic random for simulation
+              setAudioLevels(prev => prev.map(l => {
+                  const target = Math.random() * 80 + 10;
+                  return l + (target - l) * 0.5;
+              }));
           }, 100);
-      } else {
+      } else if (!isPlayingRecording && !(room.status === 'playing_meme' && currentMeme?.fileBase64)) {
+          // If not simulated, not playing recording, not playing file -> clear
           setAudioLevels(Array(20).fill(0));
       }
       return () => clearInterval(interval);
-  }, [room.status, isRecording, isPlayingRecording]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [room.status, isRecording, isPlayingRecording, currentMeme]);
+
 
   useEffect(() => {
       if (room.status === 'playing_meme') {
@@ -61,7 +135,10 @@ export default function ImitMemeBoard({ room, user, socket }: ImitMemeBoardProps
              const base64Audio = currentMeme.recordings[room.currentlyPlayingRecordingId];
              if (base64Audio && audioPlayerRef.current) {
                  audioPlayerRef.current.src = base64Audio;
-                 audioPlayerRef.current.play().catch(e => console.error("Playback failed", e));
+                 audioPlayerRef.current.crossOrigin = "anonymous";
+                 audioPlayerRef.current.play().then(() => {
+                     setupRealVisualizer(audioPlayerRef.current!);
+                 }).catch(e => console.error("Playback failed", e));
                  setIsPlayingRecording(true);
              }
           } else {
@@ -153,7 +230,16 @@ export default function ImitMemeBoard({ room, user, socket }: ImitMemeBoardProps
       if (currentMeme.fileBase64) {
           return (
               <div className="relative w-full flex flex-col items-center justify-center p-8 bg-black/50 rounded-2xl overflow-hidden shadow-2xl border border-white/10">
-                 <audio src={currentMeme.fileBase64} autoPlay controls className="w-full z-40 relative" />
+                 <audio
+                     src={currentMeme.fileBase64}
+                     autoPlay
+                     controls
+                     crossOrigin="anonymous"
+                     className="w-full z-40 relative"
+                     onPlay={(e) => setupRealVisualizer(e.currentTarget)}
+                     onEnded={() => stopRealVisualizer()}
+                     onPause={() => stopRealVisualizer()}
+                 />
 
                  {/* Visualizer Background */}
                  <div className="absolute inset-0 flex items-center justify-center gap-1 z-10 bg-black/80 backdrop-blur-sm pointer-events-none">
@@ -181,9 +267,9 @@ export default function ImitMemeBoard({ room, user, socket }: ImitMemeBoardProps
       return (
           <div className="relative w-full aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl border border-white/10 group">
              {currentMeme.platform === 'tiktok' ? (
-                 <iframe src={embedUrl} allow="autoplay; fullscreen" className="absolute w-full h-[120%] -top-[10%] left-0 opacity-30 z-20" />
+                 <iframe src={embedUrl} allow="autoplay; fullscreen" className="absolute w-full h-[120%] -top-[10%] left-0 opacity-0 z-0 pointer-events-none" />
              ) : (
-                 <iframe src={embedUrl} allow="autoplay; fullscreen" className="absolute inset-0 w-full h-full opacity-30 z-20" />
+                 <iframe src={embedUrl} allow="autoplay; fullscreen" className="absolute inset-0 w-full h-full opacity-0 z-0 pointer-events-none" />
              )}
 
              {/* Audio Visualizer Overlay */}
@@ -212,7 +298,7 @@ export default function ImitMemeBoard({ room, user, socket }: ImitMemeBoardProps
 
   return (
     <div className="min-h-screen bg-[#09090b] text-white p-4 md:p-8 font-sans flex flex-col items-center overflow-x-hidden">
-      <audio ref={audioPlayerRef} onEnded={() => setIsPlayingRecording(false)} />
+      <audio ref={audioPlayerRef} onEnded={() => { setIsPlayingRecording(false); stopRealVisualizer(); }} />
 
       {/* Header */}
       <header className="w-full max-w-5xl flex justify-between items-center mb-8 relative z-10">
