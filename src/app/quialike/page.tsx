@@ -17,7 +17,7 @@ export default function Home() {
   const [profile, setProfile] = useState({ username: "", avatar: "" });
 
   useEffect(() => {
-    // Check for TikTok profile cookie on mount
+    // Check for profile cookie on mount
     const match = document.cookie.match(new RegExp('(^| )quialike_profile=([^;]+)'));
     if (match) {
       try {
@@ -222,26 +222,26 @@ export default function Home() {
                 </div>
                 <h3 className="font-black text-lg uppercase tracking-tight text-white">Vos pépites</h3>
               </div>
-              <p className="text-sm text-gray-500 font-medium mb-4 leading-relaxed">Collez les liens de 2 TikToks récents. <span className="text-[#fe2c55] font-bold">Plus c&apos;est gênant, plus c&apos;est drôle.</span></p>
+              <p className="text-sm text-gray-500 font-medium mb-4 leading-relaxed">Collez les liens de 2 vidéos récentes. <span className="text-[#fe2c55] font-bold">Plus c&apos;est gênant, plus c&apos;est drôle.</span></p>
 
               <div className="space-y-3">
                 <div className="relative group">
                   <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-[#00f2fe] transition-colors">
                     <span className="font-bold text-sm">1</span>
                   </div>
-                  <input name="url1" type="url" required placeholder="Lien TikTok..." className="w-full pl-10 pr-4 py-4 rounded-2xl bg-[#09090b] border border-gray-200 focus:ring-4 focus:ring-[#00f2fe]/10 focus:border-[#00f2fe] outline-none text-sm transition-all shadow-sm" />
+                  <input name="url1" type="url" required placeholder="Lien de la vidéo..." className="w-full pl-10 pr-4 py-4 rounded-2xl bg-[#09090b] border border-gray-200 focus:ring-4 focus:ring-[#00f2fe]/10 focus:border-[#00f2fe] outline-none text-sm transition-all shadow-sm" />
                 </div>
                 <div className="relative group">
                   <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-[#00f2fe] transition-colors">
                     <span className="font-bold text-sm">2</span>
                   </div>
-                  <input name="url2" type="url" placeholder="Lien TikTok (Optionnel)" className="w-full pl-10 pr-4 py-4 rounded-2xl bg-[#09090b] border border-gray-200 focus:ring-4 focus:ring-[#00f2fe]/10 focus:border-[#00f2fe] outline-none text-sm transition-all shadow-sm" />
+                  <input name="url2" type="url" placeholder="Lien de la vidéo (Optionnel)" className="w-full pl-10 pr-4 py-4 rounded-2xl bg-[#09090b] border border-gray-200 focus:ring-4 focus:ring-[#00f2fe]/10 focus:border-[#00f2fe] outline-none text-sm transition-all shadow-sm" />
                 </div>
                 <div className="relative group">
                   <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-[#00f2fe] transition-colors">
                     <span className="font-bold text-sm">3</span>
                   </div>
-                  <input name="url3" type="url" placeholder="Lien TikTok (Optionnel)" className="w-full pl-10 pr-4 py-4 rounded-2xl bg-[#09090b] border border-gray-200 focus:ring-4 focus:ring-[#00f2fe]/10 focus:border-[#00f2fe] outline-none text-sm transition-all shadow-sm" />
+                  <input name="url3" type="url" placeholder="Lien de la vidéo (Optionnel)" className="w-full pl-10 pr-4 py-4 rounded-2xl bg-[#09090b] border border-gray-200 focus:ring-4 focus:ring-[#00f2fe]/10 focus:border-[#00f2fe] outline-none text-sm transition-all shadow-sm" />
                 </div>
               </div>
 

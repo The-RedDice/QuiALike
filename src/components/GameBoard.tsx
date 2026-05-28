@@ -303,14 +303,6 @@ export default function GameBoard({ room, user, socket }: GameBoardProps) {
               allow="autoplay; fullscreen"
               onLoad={handleVideoLoad}
             />
-        ) : currentVideo.platform === 'snapchat' && currentVideo.videoId ? (
-            <iframe
-              key={currentVideo.videoId}
-              src={`https://story.snapchat.com/o/W${currentVideo.videoId}?share_id=none&embed=true`}
-              className={`w-full h-full border-0 pointer-events-auto ${!room.videoStartTime ? 'opacity-0' : 'opacity-100'}`}
-              allow="autoplay; fullscreen"
-              onLoad={handleVideoLoad}
-            />
         ) : (
             <video
               key={currentVideo.url}
@@ -330,7 +322,7 @@ export default function GameBoard({ room, user, socket }: GameBoardProps) {
             </div>
         )}
 
-        {/* Transparent overlay allowing clicks to pass through so the user can interact (e.g. click to play TikTok iframe) */}
+        {/* Transparent overlay allowing clicks to pass through so the user can interact (e.g. click to play video iframe) */}
         <div className="absolute inset-0 z-10 pointer-events-none"></div>
 
         <div className="absolute bottom-0 left-0 h-1.5 bg-white/20 w-full z-20">

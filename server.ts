@@ -150,7 +150,7 @@ app.prepare().then(() => {
       for (let i = 0; i < videoUrls.length; i++) {
         let url = videoUrls[i];
         let videoId: string | undefined;
-        let platform: 'tiktok' | 'instagram' | 'snapchat' | 'unknown' = 'unknown';
+        let platform: 'tiktok' | 'instagram' | 'unknown' = 'unknown';
 
         if (url.includes('tiktok.com')) {
           platform = 'tiktok';
@@ -178,12 +178,6 @@ app.prepare().then(() => {
         } else if (url.includes('instagram.com/reel') || url.includes('instagram.com/p/')) {
           platform = 'instagram';
           const match = url.match(/(?:reel|p)\/([A-Za-z0-9_-]+)/);
-          if (match && match[1]) {
-             videoId = match[1];
-          }
-        } else if (url.includes('snapchat.com/spotlight') || url.includes('snapchat.com/t/')) {
-          platform = 'snapchat';
-          const match = url.match(/(?:spotlight|t)\/([A-Za-z0-9_-]+)/);
           if (match && match[1]) {
              videoId = match[1];
           }
