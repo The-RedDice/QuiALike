@@ -328,6 +328,29 @@ app.prepare().then(() => {
       }
     });
 
+
+    socket.on("leave-room", (roomCode: string) => {
+      const room = rooms.get(roomCode);
+      if (!room) return;
+
+      const playerIndex = room.players.findIndex(p => p.socketId === socket.id);
+      if (playerIndex !== -1) {
+        const player = room.players[playerIndex];
+        room.players.splice(playerIndex, 1);
+        socket.leave(roomCode);
+
+        if (room.players.length === 0) {
+          rooms.delete(roomCode);
+        } else {
+          // If the host left, assign host to the next player
+          if (player.isHost) {
+            room.players[0].isHost = true;
+          }
+          io.to(roomCode).emit("room-updated", room);
+        }
+      }
+    });
+
     socket.on("disconnect", () => {
       rooms.forEach((room, roomCode) => {
         const player = room.players.find(p => p.socketId === socket.id);
