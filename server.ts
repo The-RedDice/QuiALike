@@ -150,7 +150,7 @@ app.prepare().then(() => {
       for (let i = 0; i < videoUrls.length; i++) {
         let url = videoUrls[i];
         let videoId: string | undefined;
-        let platform: 'tiktok' | 'instagram' | 'unknown' = 'unknown';
+        let platform: 'tiktok' | 'instagram' | 'youtube' | 'unknown' = 'unknown';
 
         if (url.includes('tiktok.com')) {
           platform = 'tiktok';
@@ -178,6 +178,12 @@ app.prepare().then(() => {
         } else if (url.includes('instagram.com/reel') || url.includes('instagram.com/p/')) {
           platform = 'instagram';
           const match = url.match(/(?:reel|p)\/([A-Za-z0-9_-]+)/);
+          if (match && match[1]) {
+             videoId = match[1];
+          }
+        } else if (url.includes('youtube.com/shorts/') || url.includes('youtu.be/')) {
+          platform = 'youtube';
+          const match = url.match(/(?:shorts\/|youtu\.be\/)([A-Za-z0-9_-]+)/);
           if (match && match[1]) {
              videoId = match[1];
           }
@@ -266,8 +272,8 @@ app.prepare().then(() => {
 
       const currentVideo = room.videos[room.currentVideoIndex];
 
-      // Prevent the owner of the video from voting
-      if (currentVideo.correctPlayerIds.includes(votingPlayer.id)) {
+      // Prevent the owner of the video from voting, and prevent voting for oneself
+      if (currentVideo.correctPlayerIds.includes(votingPlayer.id) || votingPlayer.id === targetPlayerId) {
         return;
       }
 

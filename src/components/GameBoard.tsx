@@ -303,6 +303,14 @@ export default function GameBoard({ room, user, socket }: GameBoardProps) {
               allow="autoplay; fullscreen"
               onLoad={handleVideoLoad}
             />
+        ) : currentVideo.platform === 'youtube' && currentVideo.videoId ? (
+            <iframe
+              key={currentVideo.videoId}
+              src={`https://www.youtube.com/embed/${currentVideo.videoId}?autoplay=1&loop=1&playlist=${currentVideo.videoId}&controls=0`}
+              className={`w-full h-full border-0 pointer-events-auto ${!room.videoStartTime ? 'opacity-0' : 'opacity-100'}`}
+              allow="autoplay; fullscreen"
+              onLoad={handleVideoLoad}
+            />
         ) : (
             <video
               key={currentVideo.url}
@@ -364,16 +372,16 @@ export default function GameBoard({ room, user, socket }: GameBoardProps) {
               <button
                 key={p.id}
                 onClick={() => submitVote(p.id)}
-                disabled={hasVoted || revealed || !room.videoStartTime}
+                disabled={hasVoted || revealed || !room.videoStartTime || p.id === user.id}
                 className={`
                   group relative flex items-center gap-4 p-4 rounded-[1.5rem] border-2 transition-all text-left
-                  ${!hasVoted && !revealed && room.videoStartTime ? 'border-white/5 bg-white/5 hover:border-white/30 hover:bg-white/10 hover:scale-[1.02]' : ''}
+                  ${!hasVoted && !revealed && room.videoStartTime && p.id !== user.id ? 'border-white/5 bg-white/5 hover:border-white/30 hover:bg-white/10 hover:scale-[1.02]' : ''}
                   ${revealed && isCorrect ? 'border-green-500 bg-green-50 scale-[1.02]' : ''}
                   ${hasVoted && !revealed && isMyChoice ? 'border-blue-500 bg-blue-50' : ''}
                   ${hasVoted && !revealed && !isMyChoice ? 'border-white/5 bg-white/5 opacity-60' : ''}
                   ${revealed && !isCorrect && isMyChoice ? 'border-red-500 bg-red-50' : ''}
                   ${revealed && !isCorrect && !isMyChoice ? 'border-white/5 bg-white/5 opacity-30 grayscale' : ''}
-                  ${!room.videoStartTime ? 'opacity-50 cursor-not-allowed border-white/5 bg-white/5' : ''}
+                  ${!room.videoStartTime || p.id === user.id ? 'opacity-50 cursor-not-allowed border-white/5 bg-white/5' : ''}
                 `}
               >
                 <div className="relative">

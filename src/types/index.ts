@@ -28,7 +28,7 @@ export interface Video {
   id: string;
   url: string;
   videoId?: string;
-  platform?: 'tiktok' | 'instagram' | 'unknown';
+  platform?: 'tiktok' | 'instagram' | 'youtube' | 'unknown';
   thumbnail: string;
   correctPlayerIds: string[]; // IDs of players who liked this video
 }

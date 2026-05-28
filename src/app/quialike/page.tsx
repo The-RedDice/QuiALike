@@ -222,7 +222,13 @@ export default function Home() {
                 </div>
                 <h3 className="font-black text-lg uppercase tracking-tight text-white">Vos pépites</h3>
               </div>
-              <p className="text-sm text-gray-500 font-medium mb-4 leading-relaxed">Collez les liens de 2 vidéos récentes. <span className="text-[#fe2c55] font-bold">Plus c&apos;est gênant, plus c&apos;est drôle.</span></p>
+              <p className="text-sm text-gray-500 font-medium mb-2 leading-relaxed">Collez les liens de 2 vidéos récentes. <span className="text-[#fe2c55] font-bold">Plus c&apos;est gênant, plus c&apos;est drôle.</span></p>
+              <div className="flex gap-2 items-center text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-6 opacity-80">
+                <span>Supporte :</span>
+                <span className="bg-white/10 px-2 py-0.5 rounded-md">TikTok</span>
+                <span className="bg-white/10 px-2 py-0.5 rounded-md">Instagram</span>
+                <span className="bg-white/10 px-2 py-0.5 rounded-md">YouTube Shorts</span>
+              </div>
 
               <div className="space-y-3">
                 <div className="relative group">
