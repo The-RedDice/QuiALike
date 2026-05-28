@@ -75,8 +75,8 @@ export default function Home() {
         setRoom(startedRoom);
     });
 
-    socket.on("next-video", ({ currentVideoIndex }: { currentVideoIndex: number }) => {
-        setRoom(prev => prev ? { ...prev, currentVideoIndex } : null);
+    socket.on("next-video", ({ currentVideoIndex, videoStartTime }: { currentVideoIndex: number, videoStartTime: number }) => {
+        setRoom(prev => prev ? { ...prev, currentVideoIndex, videoStartTime, status: 'playing', currentVotes: {} } : null);
     });
 
     socket.on("game-ended", (endedRoom: Room) => {
@@ -119,6 +119,17 @@ export default function Home() {
     socket.emit("join-room", roomCode, profile);
   };
 
+
+  const handleLeaveRoom = () => {
+    if (socket && room) {
+      socket.emit("leave-room", room.code);
+    }
+    sessionStorage.removeItem("current_room");
+    setRoom(null);
+    setRoomCode("");
+    window.location.href = '/';
+  };
+
   const startGame = () => {
     if (room && socket) {
       socket.emit("start-game", room.code);
@@ -135,7 +146,14 @@ export default function Home() {
     const iHaveSubmitted = user?.hasSubmittedVideos;
 
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-[#09090b] text-white">
+      <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-[#09090b] text-white relative">
+        <button
+          onClick={handleLeaveRoom}
+          className="absolute top-6 left-6 p-3 rounded-full bg-white/5 hover:bg-[#fe2c55]/20 text-gray-400 hover:text-[#fe2c55] transition-colors border border-white/10 group z-50 flex items-center gap-2"
+        >
+          <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
+          <span className="font-bold text-sm hidden sm:inline">Quitter la salle</span>
+        </button>
         <div className="w-full max-w-md bg-[#09090b] p-8 rounded-[2.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/10/50 animate-in fade-in zoom-in-95 duration-500">
           <div className="flex justify-between items-center mb-10 relative">
             <h1 className="text-2xl font-bold tracking-tight text-gray-500 flex flex-col leading-none">
@@ -186,7 +204,7 @@ export default function Home() {
               onSubmit={(e) => {
                 e.preventDefault();
                 const formData = new FormData(e.currentTarget);
-                const urls = [formData.get('url1') as string, formData.get('url2') as string].filter(Boolean);
+                const urls = [formData.get('url1') as string, formData.get('url2') as string, formData.get('url3') as string].filter(Boolean);
                 if (urls.length > 0 && socket) {
                   socket.emit("submit-videos", { roomCode: room.code, videoUrls: urls, username: profile.username });
                 }
@@ -213,6 +231,12 @@ export default function Home() {
                     <span className="font-bold text-sm">2</span>
                   </div>
                   <input name="url2" type="url" placeholder="Lien TikTok (Optionnel)" className="w-full pl-10 pr-4 py-4 rounded-2xl bg-[#09090b] border border-gray-200 focus:ring-4 focus:ring-[#00f2fe]/10 focus:border-[#00f2fe] outline-none text-sm transition-all shadow-sm" />
+                </div>
+                <div className="relative group">
+                  <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-[#00f2fe] transition-colors">
+                    <span className="font-bold text-sm">3</span>
+                  </div>
+                  <input name="url3" type="url" placeholder="Lien TikTok (Optionnel)" className="w-full pl-10 pr-4 py-4 rounded-2xl bg-[#09090b] border border-gray-200 focus:ring-4 focus:ring-[#00f2fe]/10 focus:border-[#00f2fe] outline-none text-sm transition-all shadow-sm" />
                 </div>
               </div>
 

@@ -160,7 +160,7 @@ export default function GameBoard({ room, user, socket }: GameBoardProps) {
 
           <button
             onClick={() => window.location.reload()}
-            className="w-full py-6 bg-gray-100 text-white rounded-3xl font-black text-lg hover:bg-gray-200 transition-all"
+            className="w-full py-6 bg-white text-[#09090b] rounded-3xl font-black text-lg hover:scale-[1.02] transition-all"
           >
             REJOUER
           </button>
@@ -291,7 +291,7 @@ export default function GameBoard({ room, user, socket }: GameBoardProps) {
             {user.isHost && (
               <button
                 onClick={nextVideo}
-                className="w-full py-5 bg-white text-white rounded-2xl font-black text-lg hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                className="w-full py-5 bg-white text-[#09090b] rounded-2xl font-black text-lg hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
               >
                 {room.currentVideoIndex < room.videos.length - 1 ? 'VIDÉO SUIVANTE' : 'VOIR LES RÉSULTATS'}
                 <ArrowRight size={20} />

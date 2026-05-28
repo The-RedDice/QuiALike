@@ -249,10 +249,18 @@ app.prepare().then(() => {
          return;
       }
 
+
       room.status = 'playing';
       room.currentVideoIndex = 0;
-      room.videos.sort(() => 0.5 - Math.random()); // Shuffle the videos
+
+      // Better shuffle algorithm (Fisher-Yates) to prevent repeating videos
+      for (let i = room.videos.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [room.videos[i], room.videos[j]] = [room.videos[j], room.videos[i]];
+      }
+
       room.currentVotes = {};
+
       room.videoStartTime = Date.now();
       io.to(cleanCode).emit("game-started", room);
     });
