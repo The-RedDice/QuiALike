@@ -307,18 +307,7 @@ export default function GameBoard({ room, user, socket }: GameBoardProps) {
 
       {/* Game UI Section */}
       <div className="w-full max-w-md space-y-8 animate-in slide-in-from-right-8 duration-500">
-        {isMyVideo && !revealed ? (
-          <div className="flex flex-col items-center justify-center h-full text-center p-8 bg-white/5 rounded-[2.5rem] border border-white/10 relative overflow-hidden">
-             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#00f2fe] to-transparent animate-pulse" />
-             <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#fe2c55] to-transparent animate-pulse" />
-             <Loader2 size={48} className="animate-spin text-white mb-6" />
-             <h2 className="text-3xl font-black italic tracking-tighter uppercase mb-2">C&apos;est ta vidéo !</h2>
-             <p className="text-gray-400 font-medium">Laisse les autres deviner qui a liké ça...</p>
-             <div className="mt-8 px-4 py-2 bg-black/40 rounded-full text-sm font-bold border border-white/10">
-                {votedCount} / {room.players.length - 1} ont voté
-             </div>
-          </div>
-        ) : (
+        {!isMyVideo ? (
           <>
             <div className="text-center lg:text-left">
               <h2 className="text-4xl font-black italic tracking-tighter uppercase leading-none">C&apos;est qui<br/>le coupable ?</h2>
@@ -375,6 +364,19 @@ export default function GameBoard({ room, user, socket }: GameBoardProps) {
           })}
             </div>
           </>
+        ) : (
+          !revealed && (
+            <div className="flex flex-col items-center justify-center h-full text-center p-8 bg-white/5 rounded-[2.5rem] border border-white/10 relative overflow-hidden">
+               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#00f2fe] to-transparent animate-pulse" />
+               <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#fe2c55] to-transparent animate-pulse" />
+               <Loader2 size={48} className="animate-spin text-white mb-6" />
+               <h2 className="text-3xl font-black italic tracking-tighter uppercase mb-2">C&apos;est ta vidéo !</h2>
+               <p className="text-gray-400 font-medium">Laisse les autres deviner qui a liké ça...</p>
+               <div className="mt-8 px-4 py-2 bg-black/40 rounded-full text-sm font-bold border border-white/10">
+                  {votedCount} / {room.players.length - 1} ont voté
+               </div>
+            </div>
+          )
         )}
 
         {revealed && (
