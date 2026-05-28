@@ -260,6 +260,10 @@ app.prepare().then(() => {
       }
 
       room.currentVotes = {};
+      room.previousScores = {};
+      room.players.forEach(p => {
+          room.previousScores![p.id] = p.score;
+      });
 
       room.videoStartTime = Date.now();
       io.to(cleanCode).emit("game-started", room);
@@ -273,10 +277,16 @@ app.prepare().then(() => {
       const votingPlayer = room.players.find(p => p.username === username);
       if (!votingPlayer) return;
 
+      const currentVideo = room.videos[room.currentVideoIndex];
+
+      // Prevent the owner of the video from voting
+      if (currentVideo.correctPlayerIds.includes(votingPlayer.id)) {
+        return;
+      }
+
       // Update their socketId just in case it was out of sync
       votingPlayer.socketId = socket.id;
 
-      const currentVideo = room.videos[room.currentVideoIndex];
       const isCorrect = currentVideo.correctPlayerIds.includes(targetPlayerId);
 
       // Calculate server-authoritative time if not perfectly provided
@@ -294,8 +304,9 @@ app.prepare().then(() => {
       // Notify others that someone voted to show loader/count
       io.to(cleanCode).emit("player-voted");
 
-      // Check if everyone has voted
-      if (Object.keys(room.currentVotes).length === room.players.length) {
+      // Check if everyone (who is allowed to vote) has voted
+      const expectedVoters = room.players.filter(p => !currentVideo.correctPlayerIds.includes(p.id)).length;
+      if (Object.keys(room.currentVotes).length >= expectedVoters) {
         io.to(cleanCode).emit("results-revealed", {
             results: room.currentVotes,
             correctPlayerIds: currentVideo.correctPlayerIds,
@@ -317,6 +328,15 @@ app.prepare().then(() => {
         });
     });
 
+    socket.on("show-leaderboard", (roomCode: string) => {
+        const cleanCode = roomCode.toUpperCase();
+        const room = rooms.get(cleanCode);
+        if (!room || room.players[0].socketId !== socket.id) return;
+
+        room.status = 'leaderboard';
+        io.to(cleanCode).emit("room-updated", room);
+    });
+
     socket.on("next-video", (roomCode: string) => {
       const cleanCode = roomCode.toUpperCase();
       const room = rooms.get(cleanCode);
@@ -325,6 +345,12 @@ app.prepare().then(() => {
       if (room.currentVideoIndex < room.videos.length - 1) {
         room.currentVideoIndex++;
         room.currentVotes = {};
+
+        room.previousScores = {};
+        room.players.forEach(p => {
+            room.previousScores![p.id] = p.score;
+        });
+
         room.videoStartTime = Date.now();
         room.status = 'playing'; // explicitly set to playing for next round sync
         // Emit full room-updated to ensure currentVotes state is synced across clients

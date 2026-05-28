@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { Room, Player } from "@/types";
 import { Timer, CheckCircle2, XCircle, Trophy, ArrowRight, Loader2, ArrowLeft } from "lucide-react";
 import { Socket } from "socket.io-client";
+import { motion } from "framer-motion";
 
 interface GameBoardProps {
   room: Room;
@@ -18,7 +19,8 @@ export default function GameBoard({ room, user, socket }: GameBoardProps) {
   // Initialize state based on whether we are reconnecting mid-results
   const isResultsPhase = room.status === 'results';
 
-  const [hasVoted, setHasVoted] = useState(() => !!room.currentVotes?.[user.id]);
+  const isMyVideo = currentVideo?.correctPlayerIds.includes(user.id);
+  const [hasVoted, setHasVoted] = useState(() => !!room.currentVotes?.[user.id] || isMyVideo);
   const [votedPlayerId, setVotedPlayerId] = useState<string | null>(() => room.currentVotes?.[user.id]?.targetPlayerId || null);
   const [revealed, setRevealed] = useState(isResultsPhase);
   const [revealData, setRevealData] = useState<{
@@ -35,7 +37,8 @@ export default function GameBoard({ room, user, socket }: GameBoardProps) {
     // Only reset state if the game transitions back to playing (next video)
     // Avoid overwriting state if we are just receiving a late reconnection in results phase
     if (room.status === 'playing') {
-      setHasVoted(!!room.currentVotes?.[user.id]);
+      const currentlyMyVideo = room.videos[room.currentVideoIndex]?.correctPlayerIds.includes(user.id);
+      setHasVoted(!!room.currentVotes?.[user.id] || currentlyMyVideo);
       setVotedPlayerId(room.currentVotes?.[user.id]?.targetPlayerId || null);
       setRevealed(false);
       revealedRef.current = false;
@@ -118,7 +121,90 @@ export default function GameBoard({ room, user, socket }: GameBoardProps) {
     window.location.href = '/';
   };
 
-  if (room.status === 'results') {
+  if (room.status === 'leaderboard') {
+    const sortedPlayers = [...room.players].sort((a, b) => b.score - a.score);
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-[#09090b] text-white animate-in fade-in duration-700 relative w-full">
+        <button
+          onClick={handleLeave}
+          className="absolute top-6 left-6 p-3 rounded-full bg-white/5 hover:bg-[#fe2c55]/20 text-gray-400 hover:text-[#fe2c55] transition-colors border border-white/10 group z-50 flex items-center gap-2"
+        >
+          <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
+          <span className="font-bold text-sm hidden sm:inline">Quitter</span>
+        </button>
+        <div className="w-full max-w-xl text-center">
+          <h1 className="text-4xl font-black italic tracking-tighter mb-8 uppercase">Classement Actuel</h1>
+
+          <div className="space-y-4 mb-12 relative h-[400px]">
+            {sortedPlayers.map((p, index) => {
+              const previousScore = room.previousScores?.[p.id] || 0;
+              const pointsGained = p.score - previousScore;
+
+              return (
+                <motion.div
+                  key={p.id}
+                  layout
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{
+                      type: "spring",
+                      stiffness: 300,
+                      damping: 30,
+                      layout: { duration: 0.8, type: "spring", bounce: 0.2 }
+                  }}
+                  className={`
+                    absolute w-full flex items-center gap-4 p-5 rounded-[2rem] transition-colors
+                    ${index === 0 ? 'bg-black text-white border-2 border-yellow-400/50 shadow-[0_0_30px_rgba(250,204,21,0.2)]' : 'bg-white/5 border border-white/10'}
+                  `}
+                  style={{ top: index * 90 }} // 90px spacing between items
+                >
+                  <div className={`
+                      w-10 h-10 rounded-full flex items-center justify-center font-black text-lg
+                      ${index === 0 ? 'bg-yellow-400 text-black' : 'bg-white/10 text-gray-400'}
+                  `}>
+                      {index + 1}
+                  </div>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={p.avatar} alt={p.username} className="w-12 h-12 rounded-full ring-2 ring-white/20" />
+                  <span className="font-bold text-xl flex-1 text-left truncate">@{p.username}</span>
+
+                  <div className="text-right flex flex-col">
+                      <span className={`font-black text-2xl ${index === 0 ? 'text-yellow-400' : 'text-white'}`}>{p.score}</span>
+                      {pointsGained > 0 && (
+                          <motion.span
+                              initial={{ opacity: 0, x: -10 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: 0.5, duration: 0.5 }}
+                              className="text-sm font-bold text-green-400"
+                          >
+                              +{pointsGained}
+                          </motion.span>
+                      )}
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+
+          {user.isHost ? (
+            <button
+              onClick={nextVideo}
+              className="w-full max-w-md mx-auto py-6 bg-white text-[#09090b] rounded-3xl font-black text-lg hover:scale-[1.02] transition-all flex items-center justify-center gap-2"
+            >
+              {room.currentVideoIndex < room.videos.length - 1 ? 'CONTINUER' : 'PODIUM FINAL'}
+              <ArrowRight size={20} />
+            </button>
+          ) : (
+            <div className="text-center py-4 text-white/40 font-bold text-sm animate-pulse italic">
+                En attente du host pour la suite...
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  if (room.status === 'ended') {
     const sortedPlayers = [...room.players].sort((a, b) => b.score - a.score);
     return (
       <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-[#09090b] text-white animate-in fade-in duration-700 relative">
@@ -221,15 +307,28 @@ export default function GameBoard({ room, user, socket }: GameBoardProps) {
 
       {/* Game UI Section */}
       <div className="w-full max-w-md space-y-8 animate-in slide-in-from-right-8 duration-500">
-        <div className="text-center lg:text-left">
-          <h2 className="text-4xl font-black italic tracking-tighter uppercase leading-none">C&apos;est qui<br/>le coupable ?</h2>
-          <div className="flex items-center justify-center lg:justify-start gap-2 mt-4">
-              <p className="text-gray-400 font-medium">{votedCount} / {room.players.length} ont voté</p>
-              {hasVoted && !revealed && <Loader2 size={16} className="animate-spin text-blue-500" />}
+        {isMyVideo && !revealed ? (
+          <div className="flex flex-col items-center justify-center h-full text-center p-8 bg-white/5 rounded-[2.5rem] border border-white/10 relative overflow-hidden">
+             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#00f2fe] to-transparent animate-pulse" />
+             <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#fe2c55] to-transparent animate-pulse" />
+             <Loader2 size={48} className="animate-spin text-white mb-6" />
+             <h2 className="text-3xl font-black italic tracking-tighter uppercase mb-2">C&apos;est ta vidéo !</h2>
+             <p className="text-gray-400 font-medium">Laisse les autres deviner qui a liké ça...</p>
+             <div className="mt-8 px-4 py-2 bg-black/40 rounded-full text-sm font-bold border border-white/10">
+                {votedCount} / {room.players.length - 1} ont voté
+             </div>
           </div>
-        </div>
+        ) : (
+          <>
+            <div className="text-center lg:text-left">
+              <h2 className="text-4xl font-black italic tracking-tighter uppercase leading-none">C&apos;est qui<br/>le coupable ?</h2>
+              <div className="flex items-center justify-center lg:justify-start gap-2 mt-4">
+                  <p className="text-gray-400 font-medium">{votedCount} / {room.players.length - currentVideo.correctPlayerIds.length} ont voté</p>
+                  {hasVoted && !revealed && <Loader2 size={16} className="animate-spin text-blue-500" />}
+              </div>
+            </div>
 
-        <div className="grid grid-cols-1 gap-3">
+            <div className="grid grid-cols-1 gap-3">
           {room.players.map((p) => {
             const isCorrect = revealData?.correctPlayerIds.includes(p.id);
             const isMyChoice = votedPlayerId === p.id;
@@ -274,26 +373,40 @@ export default function GameBoard({ room, user, socket }: GameBoardProps) {
               </button>
             );
           })}
-        </div>
+            </div>
+          </>
+        )}
 
         {revealed && (
           <div className="p-8 rounded-[2.5rem] bg-[#18181b] text-white shadow-2xl border border-white/10 animate-in fade-in zoom-in duration-500">
-            <div className="flex items-center gap-5 mb-8">
-              <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg ${revealData?.results[user.id]?.isCorrect ? 'bg-green-500' : 'bg-[#fe2c55]'}`}>
-                {revealData?.results[user.id]?.isCorrect ? <CheckCircle2 size={30} /> : <XCircle size={30} />}
+            {!isMyVideo ? (
+              <div className="flex items-center gap-5 mb-8">
+                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg ${revealData?.results[user.id]?.isCorrect ? 'bg-green-500' : 'bg-[#fe2c55]'}`}>
+                  {revealData?.results[user.id]?.isCorrect ? <CheckCircle2 size={30} /> : <XCircle size={30} />}
+                </div>
+                <div>
+                  <p className="text-xs font-black uppercase tracking-[0.2em] text-white/40">Verdict</p>
+                  <p className="text-2xl font-black italic">{revealData?.results[user.id]?.isCorrect ? "BIEN JOUÉ !" : "T'ES NUL..."}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-xs font-black uppercase tracking-[0.2em] text-white/40">Verdict</p>
-                <p className="text-2xl font-black italic">{revealData?.results[user.id]?.isCorrect ? "BIEN JOUÉ !" : "T'ES NUL..."}</p>
+            ) : (
+              <div className="flex items-center gap-5 mb-8">
+                <div className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg bg-[#00f2fe]">
+                  <CheckCircle2 size={30} className="text-black" />
+                </div>
+                <div>
+                  <p className="text-xs font-black uppercase tracking-[0.2em] text-white/40">Verdict</p>
+                  <p className="text-2xl font-black italic">C&apos;était toi !</p>
+                </div>
               </div>
-            </div>
+            )}
 
             {user.isHost && (
               <button
-                onClick={nextVideo}
+                onClick={() => socket.emit('show-leaderboard', room.code)}
                 className="w-full py-5 bg-white text-[#09090b] rounded-2xl font-black text-lg hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
               >
-                {room.currentVideoIndex < room.videos.length - 1 ? 'VIDÉO SUIVANTE' : 'VOIR LES RÉSULTATS'}
+                VOIR LE CLASSEMENT
                 <ArrowRight size={20} />
               </button>
             )}
