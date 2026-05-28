@@ -5,10 +5,10 @@ import { useState, useEffect } from "react";
 import { useSocket } from "@/lib/socket";
 import { Room, Player } from "@/types";
 import { Users, Play, ArrowLeft } from "lucide-react";
-import GameBoard from "@/components/GameBoard";
+import ImitMemeBoard from "@/components/ImitMemeBoard";
 import Login from "@/components/Login";
 
-export default function Home() {
+export default function ImitMemeHome() {
   const { socket, connected } = useSocket();
   const [roomCode, setRoomCode] = useState("");
   const [room, setRoom] = useState<Room | null>(null);
@@ -72,16 +72,33 @@ export default function Home() {
       setTimeout(() => setError(""), 3000);
     });
 
-    socket.on("game-started", (startedRoom: Room) => {
+    socket.on("imitmeme-game-started", (startedRoom: Room) => {
         setRoom(startedRoom);
     });
 
-    socket.on("next-video", ({ currentVideoIndex, videoStartTime }: { currentVideoIndex: number, videoStartTime?: number }) => {
-        setRoom(prev => prev ? { ...prev, currentVideoIndex, videoStartTime, status: 'playing', currentVotes: {} } as any : null);
+    socket.on("next-meme", ({ currentMemeIndex }: { currentMemeIndex: number }) => {
+        setRoom(prev => prev ? { ...prev, currentMemeIndex, status: "playing_meme", currentVotes: {} } as any : null);
     });
 
-    socket.on("start-voting", ({ videoStartTime }: { videoStartTime: number }) => {
-        setRoom(prev => prev ? { ...prev, videoStartTime } as any : null);
+    socket.on("start-playing-meme", ({ memeStartTime }: { memeStartTime: number }) => {
+        setRoom(prev => prev ? { ...prev, memeStartTime } as any : null);
+    });
+
+
+    socket.on("recording-phase-started", (updatedRoom: Room) => {
+        setRoom(updatedRoom);
+    });
+
+    socket.on("listening-phase-started", (updatedRoom: Room) => {
+        setRoom(updatedRoom);
+    });
+
+    socket.on("play-recording", ({ targetPlayerId }: { targetPlayerId: string }) => {
+        setRoom(prev => prev ? { ...prev, currentlyPlayingRecordingId: targetPlayerId } as any : null);
+    });
+
+    socket.on("voting-phase-started", (updatedRoom: Room) => {
+        setRoom(updatedRoom);
     });
 
     socket.on("game-ended", (endedRoom: Room) => {
@@ -90,9 +107,9 @@ export default function Home() {
     });
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    socket.on("results-revealed", (data: any) => {
-        if (data && data.players) {
-            setRoom(prev => prev ? { ...prev, players: data.players } : null);
+    socket.on("imitmeme-results-revealed", ({ results, players }: { results: any, players: Player[] }) => {
+        if (players) {
+            setRoom(prev => prev ? { ...prev, currentVotes: results, players } as any : null);
         }
     });
 
@@ -117,7 +134,7 @@ export default function Home() {
 
   const createRoom = () => {
     if (!isLoggedIn || !socket) return;
-    socket.emit("create-room", profile);
+    socket.emit("create-room", { ...profile, gameType: "imitmeme" });
   };
 
   const joinRoom = () => {
@@ -138,13 +155,13 @@ export default function Home() {
 
   const startGame = () => {
     if (room && socket) {
-      socket.emit("start-game", room.code);
+      socket.emit("start-imitmeme-game", room.code);
     }
   };
 
-  if (room && (room.status === 'playing' || room.status === 'results' || room.status === 'leaderboard' || room.status === 'ended')) {
+  if (room && ["playing_meme", "recording", "listening", "voting", "results", "leaderboard", "ended"].includes(room.status)) {
       if (!user || !socket) return null;
-      return <GameBoard room={room as any} user={user} socket={socket} />;
+      return <ImitMemeBoard room={room as any} user={user} socket={socket} />;
   }
 
   if (room) {
@@ -210,9 +227,10 @@ export default function Home() {
               onSubmit={(e) => {
                 e.preventDefault();
                 const formData = new FormData(e.currentTarget);
-                const urls = [formData.get('url1') as string, formData.get('url2') as string, formData.get('url3') as string].filter(Boolean);
-                if (urls.length > 0 && socket) {
-                  socket.emit("submit-videos", { roomCode: room.code, videoUrls: urls, username: profile.username });
+                const url = formData.get("url") as string;
+                const duration = formData.get("duration") as string;
+                if (url && duration && socket) {
+                  socket.emit("submit-imitmeme-meme", { roomCode: room.code, url, duration, username: profile.username });
                 }
               }}
               className="relative space-y-4 mb-10 p-6 bg-gradient-to-br from-[#fe2c55]/10 to-[#18181b] border-2 border-[#fe2c55]/20 rounded-[2rem] shadow-inner animate-in fade-in slide-in-from-bottom-8 duration-700"
@@ -221,41 +239,32 @@ export default function Home() {
                 <div className="w-8 h-8 rounded-full bg-[#fe2c55]/10 flex items-center justify-center">
                   <span className="text-[#fe2c55] font-black">?</span>
                 </div>
-                <h3 className="font-black text-lg uppercase tracking-tight text-white">Vos pépites</h3>
+                <h3 className="font-black text-lg uppercase tracking-tight text-white">Ton Mème à imiter</h3>
               </div>
-              <p className="text-sm text-gray-500 font-medium mb-2 leading-relaxed">Collez les liens de 2 vidéos récentes. <span className="text-[#fe2c55] font-bold">Plus c&apos;est gênant, plus c&apos;est drôle.</span></p>
-              <div className="flex gap-2 items-center text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-6 opacity-80">
-                <span>Supporte :</span>
-                <span className="bg-white/10 px-2 py-0.5 rounded-md">TikTok</span>
-                <span className="bg-white/10 px-2 py-0.5 rounded-md">Instagram</span>
-                <span className="bg-white/10 px-2 py-0.5 rounded-md">YouTube Shorts</span>
-              </div>
+              <p className="text-sm text-gray-500 font-medium mb-2 leading-relaxed">Colle le lien d'une vidéo et indique la durée (en secondes) du passage drôle.</p>
+
 
               <div className="space-y-3">
                 <div className="relative group">
                   <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-[#00f2fe] transition-colors">
-                    <span className="font-bold text-sm">1</span>
+                    <span className="font-bold text-sm">⏱️</span>
                   </div>
-                  <input name="url1" type="url" required placeholder="Lien de la vidéo..." className="w-full pl-10 pr-4 py-4 rounded-2xl bg-[#09090b] border border-gray-200 focus:ring-4 focus:ring-[#00f2fe]/10 focus:border-[#00f2fe] outline-none text-sm transition-all shadow-sm" />
+                  <input name="duration" type="number" required min="1" max="30" placeholder="Durée en secondes (ex: 10)" className="w-full pl-10 pr-4 py-4 rounded-2xl bg-[#09090b] border border-gray-200 focus:ring-4 focus:ring-[#00f2fe]/10 focus:border-[#00f2fe] outline-none text-sm transition-all shadow-sm" />
                 </div>
                 <div className="relative group">
                   <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-[#00f2fe] transition-colors">
-                    <span className="font-bold text-sm">2</span>
+                    <span className="font-bold text-sm">🔗</span>
                   </div>
-                  <input name="url2" type="url" placeholder="Lien de la vidéo (Optionnel)" className="w-full pl-10 pr-4 py-4 rounded-2xl bg-[#09090b] border border-gray-200 focus:ring-4 focus:ring-[#00f2fe]/10 focus:border-[#00f2fe] outline-none text-sm transition-all shadow-sm" />
+                  <input name="url" type="url" required placeholder="Lien de la vidéo (TikTok/YouTube)..." className="w-full pl-10 pr-4 py-4 rounded-2xl bg-[#09090b] border border-gray-200 focus:ring-4 focus:ring-[#00f2fe]/10 focus:border-[#00f2fe] outline-none text-sm transition-all shadow-sm" />
                 </div>
-                <div className="relative group">
-                  <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-[#00f2fe] transition-colors">
-                    <span className="font-bold text-sm">3</span>
-                  </div>
-                  <input name="url3" type="url" placeholder="Lien de la vidéo (Optionnel)" className="w-full pl-10 pr-4 py-4 rounded-2xl bg-[#09090b] border border-gray-200 focus:ring-4 focus:ring-[#00f2fe]/10 focus:border-[#00f2fe] outline-none text-sm transition-all shadow-sm" />
-                </div>
+
+
               </div>
 
               <button type="submit" className="relative w-full overflow-hidden mt-6 group bg-white rounded-2xl">
                 <div className="absolute inset-0 bg-gradient-to-r from-[#00f2fe] to-[#fe2c55] opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                 <div className="relative w-full py-4 text-[#09090b] font-black text-lg tracking-wide hover:scale-[0.98] transition-transform flex justify-center items-center gap-2 z-10">
-                  VALIDER MES VIDÉOS
+                  SOUMETTRE MON MÈME
                 </div>
               </button>
             </form>
@@ -321,11 +330,11 @@ export default function Home() {
           </div>
           <h1 className="text-6xl font-black italic tracking-tighter mb-2 leading-none relative inline-block">
             <span className="absolute -inset-2 bg-gradient-to-r from-[#00f2fe]/20 to-[#fe2c55]/20 blur-2xl -z-10 rounded-full"></span>
-            <span className="text-white">QUI A</span><br/>
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#00f2fe] to-[#fe2c55]">LIKÉ ?</span>
+            <span className="text-white">IMIT'</span><br/>
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#00f2fe] to-[#fe2c55]">MÈME</span>
           </h1>
           <p className="text-gray-500 font-medium mt-4 text-sm max-w-[250px] mx-auto leading-relaxed">
-            Devinez qui parmi vos amis a liké ces vidéos.
+            Refaites les pires audios de l&apos;internet et votez pour la meilleure imitation !
           </p>
         </div>
 

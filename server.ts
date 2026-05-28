@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
 import { createServer } from "http";
 import { parse } from "url";
 import next from "next";
@@ -6,9 +7,9 @@ import express from "express";
 import { nanoid } from "nanoid";
 import { Room, Player, Video } from "./src/types";
 import dotenv from "dotenv";
-import axios from "axios";
+
 import cookieParser from "cookie-parser";
-import * as cheerio from "cheerio";
+
 
 dotenv.config();
 
@@ -28,11 +29,7 @@ const port = parseInt(process.env.PORT || "3000", 10);
 const app = next({ dev, hostname: bindHostname, port });
 const handle = app.getRequestHandler();
 
-const MOCK_VIDEOS: Video[] = [
-  { id: "1", url: "https://www.w3schools.com/html/mov_bbb.mp4", thumbnail: "", correctPlayerIds: [] },
-  { id: "2", url: "https://www.w3schools.com/html/horse.mp4", thumbnail: "", correctPlayerIds: [] },
-  { id: "3", url: "https://www.w3schools.com/html/movie.mp4", thumbnail: "", correctPlayerIds: [] },
-];
+
 
 const rooms: Map<string, Room> = new Map();
 
@@ -44,11 +41,11 @@ app.prepare().then(() => {
 
   io.on("connection", (socket) => {
     console.log("New connection:", socket.id);
-    socket.on("create-room", (userData: { username: string, avatar: string }) => {
-      console.log("Create room requested by:", userData.username);
+    socket.on("create-room", ({ gameType = "quialike", ...userData }: { username: string, avatar: string, gameType?: "quialike" | "imitmeme" }) => {
+      console.log(`Create ${gameType} room requested by:`, userData.username);
       const roomCode = nanoid(6).toUpperCase();
       const host: Player = {
-        id: userData.username, // Stable ID
+        id: userData.username,
         socketId: socket.id,
         username: userData.username,
         avatar: userData.avatar,
@@ -57,17 +54,34 @@ app.prepare().then(() => {
         hasSubmittedVideos: false
       };
 
-      const room: Room = {
-        code: roomCode,
-        players: [host],
-        status: 'lobby',
-        currentVideoIndex: 0,
-        videos: [],
-        settings: {
-          videosPerPlayer: 2
-        },
-        currentVotes: {}
-      };
+      let room: any;
+      if (gameType === 'imitmeme') {
+        room = {
+          code: roomCode,
+          gameType: 'imitmeme',
+          players: [host],
+          status: 'lobby',
+          currentMemeIndex: 0,
+          memes: [],
+          settings: {
+            memesPerPlayer: 1
+          },
+          currentVotes: {}
+        };
+      } else {
+        room = {
+          code: roomCode,
+          gameType: 'quialike',
+          players: [host],
+          status: 'lobby',
+          currentVideoIndex: 0,
+          videos: [],
+          settings: {
+            videosPerPlayer: 2
+          },
+          currentVotes: {}
+        };
+      }
 
       rooms.set(roomCode, room);
       socket.join(roomCode);
@@ -77,14 +91,14 @@ app.prepare().then(() => {
 
     socket.on("join-room", (roomCode: string, userData: { username: string, avatar: string }) => {
       const cleanCode = roomCode.toUpperCase();
-      const room = rooms.get(cleanCode);
+      const room = rooms.get(cleanCode) as any;
       if (!room) {
         socket.emit("error", "Salle non trouvée");
         return;
       }
 
       // Check if player already exists in the room
-      const existingPlayer = room.players.find(p => p.username === userData.username);
+      const existingPlayer = room.players.find((p: any) => p.username === userData.username);
 
       if (existingPlayer) {
           // Reconnect logic: update their socket ID
@@ -93,17 +107,27 @@ app.prepare().then(() => {
           socket.join(cleanCode);
 
           // If the game has already started, emit the current state directly to the reconnecting player
-          if (room.status === 'playing') {
-             socket.emit("game-started", room);
-          } else if (room.status === 'results') {
-             socket.emit("game-started", room);
-             socket.emit("results-revealed", {
-                 results: room.currentVotes,
-                 correctPlayerIds: room.videos[room.currentVideoIndex].correctPlayerIds,
-                 players: room.players
-             });
-          } else if (room.status === 'ended') {
-             socket.emit("game-ended", room);
+          if (room.gameType === 'quialike' || !room.gameType) {
+            const qRoom = room as any;
+            if (qRoom.status === 'playing') {
+               socket.emit("game-started", qRoom);
+            } else if (qRoom.status === 'results') {
+               socket.emit("game-started", qRoom);
+               socket.emit("results-revealed", {
+                   results: qRoom.currentVotes,
+                   correctPlayerIds: qRoom.videos[qRoom.currentVideoIndex].correctPlayerIds,
+                   players: qRoom.players
+               });
+            } else if (qRoom.status === 'ended') {
+               socket.emit("game-ended", qRoom);
+            }
+          } else if (room.gameType === 'imitmeme') {
+            const iRoom = room as any;
+            if (['playing_meme', 'recording', 'listening', 'voting', 'results', 'leaderboard'].includes(iRoom.status)) {
+               socket.emit("imitmeme-game-started", iRoom);
+            } else if (iRoom.status === 'ended') {
+               socket.emit("game-ended", iRoom);
+            }
           }
 
           io.to(cleanCode).emit("room-updated", room);
@@ -132,11 +156,11 @@ app.prepare().then(() => {
 
     socket.on("submit-videos", async ({ roomCode, videoUrls, username }: { roomCode: string, videoUrls: string[], username: string }) => {
       const cleanCode = roomCode.toUpperCase();
-      const room = rooms.get(cleanCode);
+      const room = rooms.get(cleanCode) as any;
       if (!room || room.status !== 'lobby') return;
 
       // Identify player by stable username to prevent issues if socket.id is somehow mismatched on reconnect
-      const player = room.players.find(p => p.username === username);
+      const player = room.players.find((p: any) => p.username === username);
       if (!player) {
          console.error("Player not found when submitting videos:", username);
          return;
@@ -204,11 +228,11 @@ app.prepare().then(() => {
 
     socket.on("start-game", (roomCode: string) => {
       const cleanCode = roomCode.toUpperCase();
-      const room = rooms.get(cleanCode);
+      const room = rooms.get(cleanCode) as any;
       if (!room || room.players[0].socketId !== socket.id) return;
 
       // Check if everyone has submitted their videos
-      const allSubmitted = room.players.every(p => p.hasSubmittedVideos);
+      const allSubmitted = room.players.every((p: any) => p.hasSubmittedVideos);
       if (!allSubmitted) {
          socket.emit("error", "Tous les joueurs n'ont pas encore soumis leurs vidéos !");
          return;
@@ -231,7 +255,7 @@ app.prepare().then(() => {
 
       room.currentVotes = {};
       room.previousScores = {};
-      room.players.forEach(p => {
+      room.players.forEach((p: any) => {
           room.previousScores![p.id] = p.score;
       });
 
@@ -243,10 +267,10 @@ app.prepare().then(() => {
 
     socket.on("video-loaded", ({ roomCode, username }: { roomCode: string, username: string }) => {
       const cleanCode = roomCode.toUpperCase();
-      const room = rooms.get(cleanCode);
+      const room = rooms.get(cleanCode) as any;
       if (!room || room.status !== 'playing') return;
 
-      const player = room.players.find(p => p.username === username);
+      const player = room.players.find((p: any) => p.username === username);
       if (!player) return;
 
       if (!room.playersLoadedVideo) room.playersLoadedVideo = [];
@@ -255,7 +279,7 @@ app.prepare().then(() => {
       }
 
       // Check if all connected players have loaded the video
-      const activePlayers = room.players.filter(p => !p.offline);
+      const activePlayers = room.players.filter((p: any) => !p.offline);
       if (room.playersLoadedVideo.length >= activePlayers.length) {
          room.videoStartTime = Date.now();
          io.to(cleanCode).emit("start-voting", { videoStartTime: room.videoStartTime });
@@ -264,10 +288,10 @@ app.prepare().then(() => {
 
     socket.on("submit-vote", ({ roomCode, targetPlayerId, timeTaken, username }: { roomCode: string, targetPlayerId: string, timeTaken: number, username: string }) => {
       const cleanCode = roomCode.toUpperCase();
-      const room = rooms.get(cleanCode);
+      const room = rooms.get(cleanCode) as any;
       if (!room || room.status !== 'playing') return;
 
-      const votingPlayer = room.players.find(p => p.username === username);
+      const votingPlayer = room.players.find((p: any) => p.username === username);
       if (!votingPlayer) return;
 
       const currentVideo = room.videos[room.currentVideoIndex];
@@ -298,7 +322,7 @@ app.prepare().then(() => {
       io.to(cleanCode).emit("player-voted");
 
       // Check if everyone (who is allowed to vote) has voted
-      const expectedVoters = room.players.filter(p => !currentVideo.correctPlayerIds.includes(p.id)).length;
+      const expectedVoters = room.players.filter((p: any) => !currentVideo.correctPlayerIds.includes(p.id)).length;
       if (Object.keys(room.currentVotes).length >= expectedVoters) {
         io.to(cleanCode).emit("results-revealed", {
             results: room.currentVotes,
@@ -310,7 +334,7 @@ app.prepare().then(() => {
 
     socket.on("reveal-results", (roomCode: string) => {
         const cleanCode = roomCode.toUpperCase();
-        const room = rooms.get(cleanCode);
+        const room = rooms.get(cleanCode) as any;
         if (!room || room.status !== 'playing') return;
 
         const currentVideo = room.videos[room.currentVideoIndex];
@@ -323,7 +347,7 @@ app.prepare().then(() => {
 
     socket.on("show-leaderboard", (roomCode: string) => {
         const cleanCode = roomCode.toUpperCase();
-        const room = rooms.get(cleanCode);
+        const room = rooms.get(cleanCode) as any;
         if (!room || room.players[0].socketId !== socket.id) return;
 
         room.status = 'leaderboard';
@@ -332,7 +356,7 @@ app.prepare().then(() => {
 
     socket.on("next-video", (roomCode: string) => {
       const cleanCode = roomCode.toUpperCase();
-      const room = rooms.get(cleanCode);
+      const room = rooms.get(cleanCode) as any;
       if (!room || room.players[0].socketId !== socket.id) return;
 
       if (room.currentVideoIndex < room.videos.length - 1) {
@@ -340,7 +364,7 @@ app.prepare().then(() => {
         room.currentVotes = {};
 
         room.previousScores = {};
-        room.players.forEach(p => {
+        room.players.forEach((p: any) => {
             room.previousScores![p.id] = p.score;
         });
 
@@ -358,10 +382,10 @@ app.prepare().then(() => {
 
 
     socket.on("leave-room", (roomCode: string) => {
-      const room = rooms.get(roomCode);
+      const room = rooms.get(roomCode) as any;
       if (!room) return;
 
-      const playerIndex = room.players.findIndex(p => p.socketId === socket.id);
+      const playerIndex = room.players.findIndex((p: any) => p.socketId === socket.id);
       if (playerIndex !== -1) {
         const player = room.players[playerIndex];
         room.players.splice(playerIndex, 1);
@@ -379,13 +403,226 @@ app.prepare().then(() => {
       }
     });
 
+
+    socket.on("submit-imitmeme-meme", async ({ roomCode, url, duration, username }: { roomCode: string, url: string, duration: string, username: string }) => {
+      const cleanCode = roomCode.toUpperCase();
+      const room = rooms.get(cleanCode) as any;
+      if (!room || room.gameType !== 'imitmeme' || room.status !== 'lobby') return;
+
+      const player = room.players.find((p: any) => p.username === username);
+      if (!player) return;
+
+      player.socketId = socket.id;
+      player.hasSubmittedVideos = true;
+
+      let platform: 'tiktok' | 'youtube' | 'unknown' = 'unknown';
+      let videoId = undefined;
+
+      if (url.includes('tiktok.com')) {
+        platform = 'tiktok';
+        if (url.includes('vm.tiktok.com') || url.includes('vt.tiktok.com')) {
+           try {
+              const res = await fetch(url, { redirect: 'manual' });
+              const location = res.headers.get('location');
+              if (location) {
+                  url = location;
+              } else if (res.url && res.url !== url) {
+                  url = res.url;
+              }
+           } catch (e) {}
+        }
+        const match = url.match(/video\/(\d+)/);
+        if (match && match[1]) {
+           videoId = match[1];
+        }
+      } else if (url.includes('youtube.com') || url.includes('youtu.be')) {
+         platform = 'youtube';
+      }
+
+      room.memes.push({
+        id: `${socket.id}-meme-${Date.now()}`,
+        url,
+        platform,
+        videoId,
+        duration: parseInt(duration, 10) || 15,
+        submitterId: player.id,
+        recordings: {}
+      });
+
+      io.to(cleanCode).emit("room-updated", room);
+    });
+
+    socket.on("start-imitmeme-game", (roomCode: string) => {
+      const cleanCode = roomCode.toUpperCase();
+      const room = rooms.get(cleanCode) as any;
+      if (!room || room.gameType !== 'imitmeme' || room.players[0].socketId !== socket.id) return;
+
+      const allSubmitted = room.players.every((p: any) => p.hasSubmittedVideos);
+      if (!allSubmitted) {
+         socket.emit("error", "Tous les joueurs n'ont pas encore soumis de mème !");
+         return;
+      }
+      if (room.memes.length === 0) {
+         socket.emit("error", "Aucun mème n'a été soumis !");
+         return;
+      }
+
+      room.status = 'playing_meme';
+      room.currentMemeIndex = 0;
+
+      for (let i = room.memes.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [room.memes[i], room.memes[j]] = [room.memes[j], room.memes[i]];
+      }
+
+      room.currentVotes = {};
+      room.previousScores = {};
+      room.players.forEach((p: any) => {
+          room.previousScores[p.id] = p.score;
+      });
+
+      room.playersLoadedMeme = [];
+      room.memeStartTime = undefined;
+      io.to(cleanCode).emit("imitmeme-game-started", room);
+    });
+
+    socket.on("meme-loaded", ({ roomCode, username }: { roomCode: string, username: string }) => {
+      const cleanCode = roomCode.toUpperCase();
+      const room = rooms.get(cleanCode) as any;
+      if (!room || room.gameType !== 'imitmeme' || room.status !== 'playing_meme') return;
+
+      const player = room.players.find((p: any) => p.username === username);
+      if (!player) return;
+
+      if (!room.playersLoadedMeme) room.playersLoadedMeme = [];
+      if (!room.playersLoadedMeme.includes(player.id)) {
+        room.playersLoadedMeme.push(player.id);
+      }
+
+      const activePlayers = room.players.filter((p: any) => !p.offline);
+      if (room.playersLoadedMeme.length >= activePlayers.length) {
+         room.memeStartTime = Date.now();
+         io.to(cleanCode).emit("start-playing-meme", { memeStartTime: room.memeStartTime });
+      }
+    });
+
+    socket.on("start-recording-phase", (roomCode: string) => {
+      const cleanCode = roomCode.toUpperCase();
+      const room = rooms.get(cleanCode) as any;
+      if (!room || room.gameType !== 'imitmeme' || room.status !== 'playing_meme') return;
+      if (room.players[0].socketId !== socket.id) return;
+
+      room.status = 'recording';
+      room.playersReadyForRecording = [];
+      io.to(cleanCode).emit("recording-phase-started", room);
+    });
+
+    socket.on("submit-recording", ({ roomCode, username, audioBase64 }: { roomCode: string, username: string, audioBase64: string }) => {
+      const cleanCode = roomCode.toUpperCase();
+      const room = rooms.get(cleanCode) as any;
+      if (!room || room.gameType !== 'imitmeme' || room.status !== 'recording') return;
+
+      const player = room.players.find((p: any) => p.username === username);
+      if (!player) return;
+
+      const currentMeme = room.memes[room.currentMemeIndex];
+      if (currentMeme) {
+          currentMeme.recordings[player.id] = audioBase64;
+      }
+
+      if (!room.playersReadyForRecording) room.playersReadyForRecording = [];
+      if (!room.playersReadyForRecording.includes(player.id)) {
+         room.playersReadyForRecording.push(player.id);
+      }
+
+      io.to(cleanCode).emit("player-recorded");
+
+      const expectedRecordings = room.players.length;
+      if (room.playersReadyForRecording.length >= expectedRecordings) {
+         room.status = 'listening';
+         io.to(cleanCode).emit("listening-phase-started", room);
+      }
+    });
+
+    socket.on("play-next-recording", ({ roomCode, targetPlayerId }: { roomCode: string, targetPlayerId: string }) => {
+      const cleanCode = roomCode.toUpperCase();
+      const room = rooms.get(cleanCode) as any;
+      if (!room || room.gameType !== 'imitmeme' || room.status !== 'listening') return;
+      if (room.players[0].socketId !== socket.id) return;
+
+      room.currentlyPlayingRecordingId = targetPlayerId;
+      io.to(cleanCode).emit("play-recording", { targetPlayerId });
+    });
+
+    socket.on("start-voting-phase", (roomCode: string) => {
+      const cleanCode = roomCode.toUpperCase();
+      const room = rooms.get(cleanCode) as any;
+      if (!room || room.gameType !== 'imitmeme' || room.status !== 'listening') return;
+      if (room.players[0].socketId !== socket.id) return;
+
+      room.status = 'voting';
+      io.to(cleanCode).emit("voting-phase-started", room);
+    });
+
+    socket.on("submit-imitmeme-vote", ({ roomCode, targetPlayerId, username }: { roomCode: string, targetPlayerId: string, username: string }) => {
+      const cleanCode = roomCode.toUpperCase();
+      const room = rooms.get(cleanCode) as any;
+      if (!room || room.gameType !== 'imitmeme' || room.status !== 'voting') return;
+
+      const voter = room.players.find((p: any) => p.username === username);
+      if (!voter) return;
+
+      if (voter.id === targetPlayerId) return;
+
+      room.currentVotes[voter.id] = targetPlayerId;
+      io.to(cleanCode).emit("player-voted");
+
+      const expectedVoters = room.players.length;
+      if (Object.keys(room.currentVotes).length >= expectedVoters) {
+         // Proportional scoring: say total votes = x. Each vote = 300 points.
+         Object.values(room.currentVotes).forEach((votedId: any) => {
+             const votedPlayer = room.players.find((p: any) => p.id === votedId);
+             if (votedPlayer) votedPlayer.score += 300;
+         });
+         room.status = 'results';
+         io.to(cleanCode).emit("imitmeme-results-revealed", {
+            results: room.currentVotes,
+            players: room.players
+         });
+      }
+    });
+
+    socket.on("next-meme", (roomCode: string) => {
+      const cleanCode = roomCode.toUpperCase();
+      const room = rooms.get(cleanCode) as any;
+      if (!room || room.gameType !== 'imitmeme' || room.players[0].socketId !== socket.id) return;
+
+      if (room.currentMemeIndex < room.memes.length - 1) {
+        room.currentMemeIndex++;
+        room.currentVotes = {};
+        room.previousScores = {};
+        room.players.forEach((p: any) => {
+            room.previousScores[p.id] = p.score;
+        });
+        room.playersLoadedMeme = [];
+        room.playersReadyForRecording = [];
+        room.memeStartTime = undefined;
+        room.status = 'playing_meme';
+        io.to(cleanCode).emit("room-updated", room);
+        io.to(cleanCode).emit("next-meme", { currentMemeIndex: room.currentMemeIndex });
+      } else {
+        room.status = 'ended';
+        io.to(cleanCode).emit("game-ended", room);
+      }
+    });
+
     socket.on("disconnect", () => {
       rooms.forEach((room, roomCode) => {
-        const player = room.players.find(p => p.socketId === socket.id);
+        const player = room.players.find((p: any) => p.socketId === socket.id);
         if (player) {
           player.offline = true;
           // Check if EVERYONE is offline
-          const allOffline = room.players.every(p => p.offline);
+          const allOffline = room.players.every((p: any) => p.offline);
           if (allOffline) {
             // Keep room alive momentarily for refresh/reconnect
           }

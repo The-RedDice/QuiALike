@@ -1,13 +1,14 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Room, Player } from "@/types";
+import { QuialikeRoom, Player } from "@/types";
 import { Timer, CheckCircle2, XCircle, Trophy, ArrowRight, Loader2, ArrowLeft } from "lucide-react";
 import { Socket } from "socket.io-client";
 import { motion } from "framer-motion";
 
 interface GameBoardProps {
-  room: Room;
+  room: QuialikeRoom;
   user: Player;
   socket: Socket;
 }
