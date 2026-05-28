@@ -404,7 +404,7 @@ app.prepare().then(() => {
     });
 
 
-    socket.on("submit-imitmeme-meme", async ({ roomCode, url, duration, username }: { roomCode: string, url: string, duration: string, username: string }) => {
+    socket.on("submit-imitmeme-meme", async ({ roomCode, url, fileBase64, duration, username }: { roomCode: string, url: string, fileBase64?: string, duration: string, username: string }) => {
       const cleanCode = roomCode.toUpperCase();
       const room = rooms.get(cleanCode) as any;
       if (!room || room.gameType !== 'imitmeme' || room.status !== 'lobby') return;
@@ -418,7 +418,7 @@ app.prepare().then(() => {
       let platform: 'tiktok' | 'youtube' | 'unknown' = 'unknown';
       let videoId = undefined;
 
-      if (url.includes('tiktok.com')) {
+      if (url && url.includes('tiktok.com')) {
         platform = 'tiktok';
         if (url.includes('vm.tiktok.com') || url.includes('vt.tiktok.com')) {
            try {
@@ -435,13 +435,14 @@ app.prepare().then(() => {
         if (match && match[1]) {
            videoId = match[1];
         }
-      } else if (url.includes('youtube.com') || url.includes('youtu.be')) {
+      } else if (url && (url.includes('youtube.com') || url.includes('youtu.be'))) {
          platform = 'youtube';
       }
 
       room.memes.push({
         id: `${socket.id}-meme-${Date.now()}`,
-        url,
+        url: url || '',
+        fileBase64,
         platform,
         videoId,
         duration: parseInt(duration, 10) || 15,

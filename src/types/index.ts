@@ -39,6 +39,7 @@ export interface ImitMemeMeme {
   duration: number;
   submitterId: string;
   recordings: Record<string, string>; // playerId -> base64 audio
+  fileBase64?: string; // For uploaded files
 }
 
 export interface ImitMemeRoom extends BaseRoom {
