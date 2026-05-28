@@ -2,11 +2,11 @@
 
 import { useState } from "react";
 
-interface TikTokLoginProps {
+interface LoginProps {
   onLogin: (username: string, avatar: string) => void;
 }
 
-export default function TikTokLogin({ onLogin }: TikTokLoginProps) {
+export default function Login({ onLogin }: LoginProps) {
   const [username, setUsername] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -19,14 +19,15 @@ export default function TikTokLogin({ onLogin }: TikTokLoginProps) {
     setError("");
 
     try {
-      const res = await fetch(`/api/profile/${encodeURIComponent(username.trim())}`);
-      const data = await res.json();
+      const trimmedUsername = username.trim();
+      const avatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(trimmedUsername)}`;
+      const data = { username: trimmedUsername, avatar };
 
       // Save to cookie so a refresh keeps them logged in
-      document.cookie = `tiktok_profile=${JSON.stringify(data)}; max-age=3600000; path=/`;
+      document.cookie = `quialike_profile=${JSON.stringify(data)}; max-age=3600000; path=/`;
       onLogin(data.username, data.avatar);
     } catch {
-      setError("Erreur lors de la récupération du profil");
+      setError("Erreur lors de la création du profil");
     } finally {
       setIsLoading(false);
     }
@@ -43,7 +44,7 @@ export default function TikTokLogin({ onLogin }: TikTokLoginProps) {
 
       <form onSubmit={handleSubmit} className="space-y-6 w-full">
         <div className="text-center text-sm text-gray-400 font-medium tracking-wide">
-          Entrez votre pseudo TikTok pour jouer
+          Entrez votre pseudo pour jouer
         </div>
 
         <div className="space-y-2">

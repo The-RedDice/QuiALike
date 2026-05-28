@@ -20,6 +20,7 @@ export interface Room {
   };
   currentVotes: Record<string, { targetPlayerId: string; isCorrect: boolean; timeTaken: number }>;
   videoStartTime?: number;
+  playersLoadedVideo?: string[]; // IDs of players who have loaded the current video
   previousScores?: Record<string, number>;
 }
 
@@ -27,6 +28,7 @@ export interface Video {
   id: string;
   url: string;
   videoId?: string;
+  platform?: 'tiktok' | 'instagram' | 'snapchat' | 'unknown';
   thumbnail: string;
   correctPlayerIds: string[]; // IDs of players who liked this video
 }

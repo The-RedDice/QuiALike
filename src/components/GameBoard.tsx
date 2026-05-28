@@ -28,6 +28,7 @@ export default function GameBoard({ room, user, socket }: GameBoardProps) {
       correctPlayerIds: string[]
   } | null>(() => isResultsPhase ? { results: room.currentVotes, correctPlayerIds: currentVideo.correctPlayerIds } : null);
   const [votedCount, setVotedCount] = useState(() => Object.keys(room.currentVotes || {}).length);
+  const [videoLoaded, setVideoLoaded] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Track `revealed` in a ref so we can read it inside updateTimer without adding it to the dependency array
@@ -45,6 +46,7 @@ export default function GameBoard({ room, user, socket }: GameBoardProps) {
       setRevealData(null);
       setVotedCount(Object.keys(room.currentVotes || {}).length);
       setTimeLeft(30);
+      setVideoLoaded(false);
     } else if (room.status === 'results') {
       setHasVoted(true);
       setRevealed(true);
@@ -56,8 +58,9 @@ export default function GameBoard({ room, user, socket }: GameBoardProps) {
       setTimeLeft(0);
     }
 
-    if (room.status === 'playing') {
+    if (room.status === 'playing' && room.videoStartTime) {
         // Purely local relative timer to avoid client-server clock skew issues
+        // We use the exact moment we receive the videoStartTime (which is now) to start our local timer
         const startTimeLocal = Date.now();
 
         const updateTimer = () => {
@@ -74,6 +77,8 @@ export default function GameBoard({ room, user, socket }: GameBoardProps) {
         };
 
         if (timerRef.current) clearInterval(timerRef.current);
+        // run immediately once
+        updateTimer();
         timerRef.current = setInterval(updateTimer, 1000);
     }
 
@@ -98,8 +103,24 @@ export default function GameBoard({ room, user, socket }: GameBoardProps) {
     };
   }, [room.currentVideoIndex, socket, user.isHost, room.code, room.videoStartTime]); // Removed 'revealed' from dependencies to prevent infinite loops
 
+  useEffect(() => {
+    if (!videoLoaded && room.status === 'playing') {
+      const timer = setTimeout(() => {
+        // Auto mark as loaded after a fallback timeout if iframe onload fails or takes too long
+        handleVideoLoad();
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [videoLoaded, room.status, room.currentVideoIndex]);
+
+  const handleVideoLoad = () => {
+    if (videoLoaded) return;
+    setVideoLoaded(true);
+    socket.emit("video-loaded", { roomCode: room.code, username: user.username });
+  };
+
   const submitVote = (targetPlayerId: string) => {
-    if (hasVoted || timeLeft === 0 || revealed) return;
+    if (hasVoted || timeLeft === 0 || revealed || !room.videoStartTime) return;
 
     setHasVoted(true);
     setVotedPlayerId(targetPlayerId);
@@ -266,22 +287,47 @@ export default function GameBoard({ room, user, socket }: GameBoardProps) {
       </button>
       {/* Video Section */}
       <div className="relative w-full max-w-[320px] aspect-[9/16] bg-black rounded-[2.5rem] overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.2)] border-[10px] border-gray-900 group">
-        {currentVideo.videoId ? (
+        {currentVideo.platform === 'tiktok' && currentVideo.videoId ? (
             <iframe
               key={currentVideo.videoId}
               src={`https://www.tiktok.com/embed/v2/${currentVideo.videoId}`}
-              className="w-full h-full border-0 pointer-events-auto"
+              className={`w-full h-full border-0 pointer-events-auto ${!room.videoStartTime ? 'opacity-0' : 'opacity-100'}`}
               allow="autoplay; fullscreen"
+              onLoad={handleVideoLoad}
+            />
+        ) : currentVideo.platform === 'instagram' && currentVideo.videoId ? (
+            <iframe
+              key={currentVideo.videoId}
+              src={`https://www.instagram.com/reel/${currentVideo.videoId}/embed`}
+              className={`w-full h-full border-0 pointer-events-auto ${!room.videoStartTime ? 'opacity-0' : 'opacity-100'}`}
+              allow="autoplay; fullscreen"
+              onLoad={handleVideoLoad}
+            />
+        ) : currentVideo.platform === 'snapchat' && currentVideo.videoId ? (
+            <iframe
+              key={currentVideo.videoId}
+              src={`https://story.snapchat.com/o/W${currentVideo.videoId}?share_id=none&embed=true`}
+              className={`w-full h-full border-0 pointer-events-auto ${!room.videoStartTime ? 'opacity-0' : 'opacity-100'}`}
+              allow="autoplay; fullscreen"
+              onLoad={handleVideoLoad}
             />
         ) : (
             <video
               key={currentVideo.url}
               src={currentVideo.url}
-              className="w-full h-full object-cover"
+              className={`w-full h-full object-cover ${!room.videoStartTime ? 'opacity-0' : 'opacity-100'}`}
               autoPlay
               loop
               playsInline
+              onLoadedData={handleVideoLoad}
             />
+        )}
+
+        {!room.videoStartTime && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 z-20 gap-4">
+                <Loader2 size={32} className="animate-spin text-white" />
+                <span className="text-white font-bold text-sm tracking-widest uppercase">Chargement...</span>
+            </div>
         )}
 
         {/* Transparent overlay allowing clicks to pass through so the user can interact (e.g. click to play TikTok iframe) */}
@@ -290,14 +336,14 @@ export default function GameBoard({ room, user, socket }: GameBoardProps) {
         <div className="absolute bottom-0 left-0 h-1.5 bg-white/20 w-full z-20">
             <div
                 className="h-full bg-white transition-all duration-1000 ease-linear"
-                style={{ width: revealed ? '0%' : `${(timeLeft / 30) * 100}%` }}
+                style={{ width: revealed ? '0%' : !room.videoStartTime ? '100%' : `${(timeLeft / 30) * 100}%` }}
             ></div>
         </div>
 
         <div className="absolute top-8 left-0 right-0 px-6 flex justify-between items-center pointer-events-none">
           <div className="bg-black/40 backdrop-blur-xl px-4 py-2 rounded-2xl flex items-center gap-2 text-white font-black border border-white/10 text-sm">
             <Timer size={16} className={timeLeft <= 5 ? 'text-red-400 animate-pulse' : 'text-white'} />
-            <span className={timeLeft <= 5 ? 'text-red-400' : 'text-white'}>{revealed ? 'FIN' : `${timeLeft}s`}</span>
+            <span className={timeLeft <= 5 ? 'text-red-400' : 'text-white'}>{revealed ? 'FIN' : !room.videoStartTime ? '...' : `${timeLeft}s`}</span>
           </div>
           <div className="bg-black/40 backdrop-blur-xl px-4 py-2 rounded-2xl text-white font-black border border-white/10 text-sm">
             {room.currentVideoIndex + 1} / {room.videos.length}
@@ -326,15 +372,16 @@ export default function GameBoard({ room, user, socket }: GameBoardProps) {
               <button
                 key={p.id}
                 onClick={() => submitVote(p.id)}
-                disabled={hasVoted || revealed}
+                disabled={hasVoted || revealed || !room.videoStartTime}
                 className={`
                   group relative flex items-center gap-4 p-4 rounded-[1.5rem] border-2 transition-all text-left
-                  ${!hasVoted && !revealed ? 'border-white/5 bg-white/5 hover:border-white/30 hover:bg-white/10 hover:scale-[1.02]' : ''}
+                  ${!hasVoted && !revealed && room.videoStartTime ? 'border-white/5 bg-white/5 hover:border-white/30 hover:bg-white/10 hover:scale-[1.02]' : ''}
                   ${revealed && isCorrect ? 'border-green-500 bg-green-50 scale-[1.02]' : ''}
                   ${hasVoted && !revealed && isMyChoice ? 'border-blue-500 bg-blue-50' : ''}
                   ${hasVoted && !revealed && !isMyChoice ? 'border-white/5 bg-white/5 opacity-60' : ''}
                   ${revealed && !isCorrect && isMyChoice ? 'border-red-500 bg-red-50' : ''}
                   ${revealed && !isCorrect && !isMyChoice ? 'border-white/5 bg-white/5 opacity-30 grayscale' : ''}
+                  ${!room.videoStartTime ? 'opacity-50 cursor-not-allowed border-white/5 bg-white/5' : ''}
                 `}
               >
                 <div className="relative">

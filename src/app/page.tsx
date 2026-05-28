@@ -4,10 +4,10 @@ import { Gamepad2, Sparkles, Lock } from "lucide-react";
 export default function HubHome() {
   const games = [
     {
-      id: "tiktok-guesser",
-      title: "TikTok Guesser",
+      id: "quialike",
+      title: "QuiALiké",
       description: "Devinez qui parmi vos amis a liké ces vidéos gênantes.",
-      href: "/tiktok-guesser",
+      href: "/quialike",
       status: "active",
       tags: ["Multijoueur", "Soirée"],
       gradient: "from-[#00f2fe]/20 to-[#fe2c55]/20",

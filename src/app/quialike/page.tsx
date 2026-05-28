@@ -5,7 +5,7 @@ import { useSocket } from "@/lib/socket";
 import { Room, Player } from "@/types";
 import { Users, Play, ArrowLeft } from "lucide-react";
 import GameBoard from "@/components/GameBoard";
-import TikTokLogin from "@/components/TikTokLogin";
+import Login from "@/components/Login";
 
 export default function Home() {
   const { socket, connected } = useSocket();
@@ -18,7 +18,7 @@ export default function Home() {
 
   useEffect(() => {
     // Check for TikTok profile cookie on mount
-    const match = document.cookie.match(new RegExp('(^| )tiktok_profile=([^;]+)'));
+    const match = document.cookie.match(new RegExp('(^| )quialike_profile=([^;]+)'));
     if (match) {
       try {
         const profileData = JSON.parse(decodeURIComponent(match[2]));
@@ -75,8 +75,12 @@ export default function Home() {
         setRoom(startedRoom);
     });
 
-    socket.on("next-video", ({ currentVideoIndex, videoStartTime }: { currentVideoIndex: number, videoStartTime: number }) => {
+    socket.on("next-video", ({ currentVideoIndex, videoStartTime }: { currentVideoIndex: number, videoStartTime?: number }) => {
         setRoom(prev => prev ? { ...prev, currentVideoIndex, videoStartTime, status: 'playing', currentVotes: {} } : null);
+    });
+
+    socket.on("start-voting", ({ videoStartTime }: { videoStartTime: number }) => {
+        setRoom(prev => prev ? { ...prev, videoStartTime } : null);
     });
 
     socket.on("game-ended", (endedRoom: Room) => {
@@ -98,6 +102,7 @@ export default function Home() {
       socket.off("error");
       socket.off("game-started");
       socket.off("next-video");
+      socket.off("start-voting");
       socket.off("game-ended");
       socket.off("results-revealed");
     };
@@ -106,7 +111,7 @@ export default function Home() {
   const handleLogout = () => {
     setIsLoggedIn(false);
     sessionStorage.removeItem("current_room");
-    document.cookie = "tiktok_profile=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    document.cookie = "quialike_profile=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
   };
 
   const createRoom = () => {
@@ -309,8 +314,8 @@ export default function Home() {
           </div>
           <h1 className="text-6xl font-black italic tracking-tighter mb-2 leading-none relative inline-block">
             <span className="absolute -inset-2 bg-gradient-to-r from-[#00f2fe]/20 to-[#fe2c55]/20 blur-2xl -z-10 rounded-full"></span>
-            <span className="text-white">TIKTOK</span><br/>
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#00f2fe] to-[#fe2c55]">GUESSER</span>
+            <span className="text-white">QUI A</span><br/>
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#00f2fe] to-[#fe2c55]">LIKÉ ?</span>
           </h1>
           <p className="text-gray-500 font-medium mt-4 text-sm max-w-[250px] mx-auto leading-relaxed">
             Devinez qui parmi vos amis a liké ces vidéos.
@@ -319,7 +324,7 @@ export default function Home() {
 
         {!isLoggedIn ? (
           <div className="bg-[#09090b]/60 backdrop-blur-xl p-8 rounded-[3rem] border border-white/10 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
-            <TikTokLogin onLogin={(username, avatar) => {
+            <Login onLogin={(username, avatar) => {
               setProfile({ username, avatar });
               setIsLoggedIn(true);
             }} />
