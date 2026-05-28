@@ -136,7 +136,7 @@ export default function Home() {
     }
   };
 
-  if (room && (room.status === 'playing' || room.status === 'results')) {
+  if (room && (room.status === 'playing' || room.status === 'results' || room.status === 'leaderboard' || room.status === 'ended')) {
       if (!user || !socket) return null;
       return <GameBoard room={room} user={user} socket={socket} />;
   }
