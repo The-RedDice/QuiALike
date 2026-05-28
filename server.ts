@@ -437,6 +437,11 @@ app.prepare().then(() => {
         }
       } else if (url && (url.includes('youtube.com') || url.includes('youtu.be'))) {
          platform = 'youtube';
+         // Match standard watch?v=, youtu.be/, shorts/, and mobile links
+         const ytMatch = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|shorts\/))([\w-]{11})/);
+         if (ytMatch && ytMatch[1]) {
+             videoId = ytMatch[1];
+         }
       }
 
       room.memes.push({
