@@ -42,53 +42,6 @@ app.prepare().then(() => {
   const server = createServer(expressApp);
   const io = new Server(server);
 
-  // Simple TikTok Profile Scraper (Bypasses OAuth)
-  expressApp.get("/api/profile/:username", async (req, res) => {
-    let { username } = req.params;
-
-    // Clean up username if they included the @ symbol
-    if (username.startsWith('@')) {
-      username = username.substring(1);
-    }
-
-    // Fallback generic avatar
-    const fallbackAvatar = `https://ui-avatars.com/api/?name=${username}&background=random&color=fff&size=200`;
-
-    try {
-      // Attempt to scrape the public TikTok profile
-      const response = await axios.get(`https://www.tiktok.com/@${username}`, {
-        headers: {
-          // Emulate a standard browser to reduce blocking chances
-          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-          "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-          "Accept-Language": "en-US,en;q=0.5"
-        },
-        timeout: 5000 // Don't hang forever if TikTok is blocking us
-      });
-
-      const $ = cheerio.load(response.data);
-      // TikTok usually stores the profile picture in the og:image meta tag
-      let avatar = $('meta[property="og:image"]').attr('content');
-
-      if (!avatar || avatar.includes('tiktok_logo')) {
-        avatar = fallbackAvatar;
-      }
-
-      res.json({
-        username: username,
-        avatar: avatar
-      });
-
-    } catch (error) {
-      console.warn(`Failed to scrape avatar for @${username}, using fallback.`);
-      // If TikTok blocks us (403, Captcha, timeout), gracefully fail and use the fallback
-      res.json({
-        username: username,
-        avatar: fallbackAvatar
-      });
-    }
-  });
-
   io.on("connection", (socket) => {
     console.log("New connection:", socket.id);
     socket.on("create-room", (userData: { username: string, avatar: string }) => {
@@ -197,33 +150,50 @@ app.prepare().then(() => {
       for (let i = 0; i < videoUrls.length; i++) {
         let url = videoUrls[i];
         let videoId: string | undefined;
+        let platform: 'tiktok' | 'instagram' | 'snapchat' | 'unknown' = 'unknown';
 
-        // Try to extract videoId if it's a shortlink
-        if (url.includes('vm.tiktok.com') || url.includes('vt.tiktok.com')) {
-           try {
-              const res = await fetch(url, { redirect: 'manual' });
-              const location = res.headers.get('location');
-              if (location) {
-                  url = location;
-              } else if (res.url && res.url !== url) {
-                  // Fallback for some fetch implementations
-                  url = res.url;
-              }
-           } catch (e) {
-              console.warn("Failed to resolve shortlink", url, e);
-           }
-        }
+        if (url.includes('tiktok.com')) {
+          platform = 'tiktok';
+          // Try to extract videoId if it's a shortlink
+          if (url.includes('vm.tiktok.com') || url.includes('vt.tiktok.com')) {
+             try {
+                const res = await fetch(url, { redirect: 'manual' });
+                const location = res.headers.get('location');
+                if (location) {
+                    url = location;
+                } else if (res.url && res.url !== url) {
+                    // Fallback for some fetch implementations
+                    url = res.url;
+                }
+             } catch (e) {
+                console.warn("Failed to resolve shortlink", url, e);
+             }
+          }
 
-        // Try to extract videoId
-        const match = url.match(/video\/(\d+)/);
-        if (match && match[1]) {
-           videoId = match[1];
+          // Try to extract videoId
+          const match = url.match(/video\/(\d+)/);
+          if (match && match[1]) {
+             videoId = match[1];
+          }
+        } else if (url.includes('instagram.com/reel') || url.includes('instagram.com/p/')) {
+          platform = 'instagram';
+          const match = url.match(/(?:reel|p)\/([A-Za-z0-9_-]+)/);
+          if (match && match[1]) {
+             videoId = match[1];
+          }
+        } else if (url.includes('snapchat.com/spotlight') || url.includes('snapchat.com/t/')) {
+          platform = 'snapchat';
+          const match = url.match(/(?:spotlight|t)\/([A-Za-z0-9_-]+)/);
+          if (match && match[1]) {
+             videoId = match[1];
+          }
         }
 
         room.videos.push({
           id: `${socket.id}-video-${i}`,
           url: url,
           videoId,
+          platform,
           thumbnail: "", // Oembed or meta tags could fetch this, keeping empty for simplicity
           correctPlayerIds: [player.id]
         });
@@ -265,8 +235,31 @@ app.prepare().then(() => {
           room.previousScores![p.id] = p.score;
       });
 
-      room.videoStartTime = Date.now();
+      room.playersLoadedVideo = [];
+      // videoStartTime will be set when all players load the video
+      room.videoStartTime = undefined;
       io.to(cleanCode).emit("game-started", room);
+    });
+
+    socket.on("video-loaded", ({ roomCode, username }: { roomCode: string, username: string }) => {
+      const cleanCode = roomCode.toUpperCase();
+      const room = rooms.get(cleanCode);
+      if (!room || room.status !== 'playing') return;
+
+      const player = room.players.find(p => p.username === username);
+      if (!player) return;
+
+      if (!room.playersLoadedVideo) room.playersLoadedVideo = [];
+      if (!room.playersLoadedVideo.includes(player.id)) {
+        room.playersLoadedVideo.push(player.id);
+      }
+
+      // Check if all connected players have loaded the video
+      const activePlayers = room.players.filter(p => !p.offline);
+      if (room.playersLoadedVideo.length >= activePlayers.length) {
+         room.videoStartTime = Date.now();
+         io.to(cleanCode).emit("start-voting", { videoStartTime: room.videoStartTime });
+      }
     });
 
     socket.on("submit-vote", ({ roomCode, targetPlayerId, timeTaken, username }: { roomCode: string, targetPlayerId: string, timeTaken: number, username: string }) => {
@@ -296,8 +289,8 @@ app.prepare().then(() => {
       room.currentVotes[votingPlayer.id] = { targetPlayerId, isCorrect, timeTaken: actualTimeTaken };
 
       if (isCorrect) {
-        // Score based on speed (max 1000 points, min 100)
-        const points = Math.max(100, Math.floor(1000 * (1 - actualTimeTaken / 30000)));
+        // Score based on speed, tighter range: max 1000 points, min 800
+        const points = Math.max(800, Math.floor(1000 - (actualTimeTaken / 30000) * 200));
         votingPlayer.score += points;
       }
 
@@ -351,13 +344,14 @@ app.prepare().then(() => {
             room.previousScores![p.id] = p.score;
         });
 
-        room.videoStartTime = Date.now();
+        room.playersLoadedVideo = [];
+        room.videoStartTime = undefined;
         room.status = 'playing'; // explicitly set to playing for next round sync
         // Emit full room-updated to ensure currentVotes state is synced across clients
         io.to(cleanCode).emit("room-updated", room);
         io.to(cleanCode).emit("next-video", { currentVideoIndex: room.currentVideoIndex, videoStartTime: room.videoStartTime });
       } else {
-        room.status = 'results';
+        room.status = 'ended';
         io.to(cleanCode).emit("game-ended", room);
       }
     });

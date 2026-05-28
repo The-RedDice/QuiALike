@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "TikTok Guesser - Devinez qui a liké !",
-  description: "Un jeu multijoueur amusant où vous devez deviner lequel de vos amis a aimé la vidéo TikTok.",
+  title: "QuiALiké - Devinez qui a liké !",
+  description: "Un jeu multijoueur amusant où vous devez deviner lequel de vos amis a aimé la vidéo.",
 };
 
 export default function RootLayout({
