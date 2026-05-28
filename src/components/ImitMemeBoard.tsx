@@ -73,7 +73,7 @@ export default function ImitMemeBoard({ room, user, socket }: ImitMemeBoardProps
 
   useEffect(() => {
       let timer: NodeJS.Timeout;
-      if (['playing_meme', 'recording'].includes(room.status)) {
+      if ((room.status === 'playing_meme' && room.memeStartTime) || room.status === 'recording') {
          timer = setInterval(() => {
              setTimeLeft(prev => {
                  if (prev <= 1) {
@@ -90,7 +90,7 @@ export default function ImitMemeBoard({ room, user, socket }: ImitMemeBoardProps
          }, 1000);
       }
       return () => clearInterval(timer);
-  }, [room.status, isRecording, user.isHost, room.code, socket]);
+  }, [room.status, room.memeStartTime, isRecording, user.isHost, room.code, socket]);
 
 
   const startRecording = async () => {
@@ -123,7 +123,7 @@ export default function ImitMemeBoard({ room, user, socket }: ImitMemeBoardProps
       setIsRecording(true);
     } catch (err) {
       console.error("Error accessing mic:", err);
-      // Fallback submit empty or error
+      alert("Veuillez autoriser l'accès au microphone pour jouer !");
       socket.emit("submit-recording", { roomCode: room.code, username: user.username, audioBase64: "" });
     }
   };
@@ -150,12 +150,40 @@ export default function ImitMemeBoard({ room, user, socket }: ImitMemeBoardProps
           embedUrl = `https://www.tiktok.com/embed/v2/${currentMeme.videoId}`;
       }
 
+      if (currentMeme.fileBase64) {
+          return (
+              <div className="relative w-full flex flex-col items-center justify-center p-8 bg-black/50 rounded-2xl overflow-hidden shadow-2xl border border-white/10">
+                 <audio src={currentMeme.fileBase64} autoPlay controls className="w-full z-40 relative" />
+
+                 {/* Visualizer Background */}
+                 <div className="absolute inset-0 flex items-center justify-center gap-1 z-10 bg-black/80 backdrop-blur-sm pointer-events-none">
+                     {audioLevels.map((level, i) => (
+                         <motion.div
+                            key={i}
+                            className="w-2 md:w-3 bg-gradient-to-t from-[#00f2fe] to-[#fe2c55] rounded-full"
+                            animate={{ height: `${Math.max(10, level)}%` }}
+                            transition={{ type: "tween", duration: 0.1 }}
+                         />
+                     ))}
+                 </div>
+                 <div className="absolute top-4 right-4 bg-black/50 text-white px-4 py-2 rounded-full font-mono text-xl z-20 font-bold tracking-widest backdrop-blur-md">
+                    00:{timeLeft.toString().padStart(2, '0')}
+                 </div>
+                 {room.status === 'playing_meme' && !room.memeStartTime && (
+                     <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/80 backdrop-blur-md">
+                        <span className="text-white font-black animate-pulse text-xl">En attente des joueurs...</span>
+                     </div>
+                 )}
+              </div>
+          );
+      }
+
       return (
           <div className="relative w-full aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl border border-white/10 group">
              {currentMeme.platform === 'tiktok' ? (
-                 <iframe src={embedUrl} className="absolute w-[calc(100%+400px)] h-[calc(100%+400px)] -top-[200px] -left-[200px] pointer-events-none opacity-10" allow="autoplay" />
+                 <iframe src={embedUrl} allow="autoplay; fullscreen" className="absolute w-full h-[120%] -top-[10%] left-0 opacity-30 z-20" />
              ) : (
-                 <iframe src={embedUrl} className="absolute inset-0 w-full h-full pointer-events-none opacity-10" allow="autoplay" />
+                 <iframe src={embedUrl} allow="autoplay; fullscreen" className="absolute inset-0 w-full h-full opacity-30 z-20" />
              )}
 
              {/* Audio Visualizer Overlay */}

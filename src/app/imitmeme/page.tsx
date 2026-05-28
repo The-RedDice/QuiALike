@@ -228,9 +228,20 @@ export default function ImitMemeHome() {
                 e.preventDefault();
                 const formData = new FormData(e.currentTarget);
                 const url = formData.get("url") as string;
+                const file = formData.get("file") as File;
                 const duration = formData.get("duration") as string;
-                if (url && duration && socket) {
-                  socket.emit("submit-imitmeme-meme", { roomCode: room.code, url, duration, username: profile.username });
+
+                if (socket && duration && (url || (file && file.size > 0))) {
+                    if (file && file.size > 0) {
+                        const reader = new FileReader();
+                        reader.readAsDataURL(file);
+                        reader.onloadend = () => {
+                            const fileBase64 = reader.result as string;
+                            socket.emit("submit-imitmeme-meme", { roomCode: room.code, url: "", fileBase64, duration, username: profile.username });
+                        };
+                    } else {
+                        socket.emit("submit-imitmeme-meme", { roomCode: room.code, url, duration, username: profile.username });
+                    }
                 }
               }}
               className="relative space-y-4 mb-10 p-6 bg-gradient-to-br from-[#fe2c55]/10 to-[#18181b] border-2 border-[#fe2c55]/20 rounded-[2rem] shadow-inner animate-in fade-in slide-in-from-bottom-8 duration-700"
@@ -255,7 +266,13 @@ export default function ImitMemeHome() {
                   <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-[#00f2fe] transition-colors">
                     <span className="font-bold text-sm">🔗</span>
                   </div>
-                  <input name="url" type="url" required placeholder="Lien de la vidéo (TikTok/YouTube)..." className="w-full pl-10 pr-4 py-4 rounded-2xl bg-[#09090b] border border-gray-200 focus:ring-4 focus:ring-[#00f2fe]/10 focus:border-[#00f2fe] outline-none text-sm transition-all shadow-sm" />
+                  <input name="url" type="url" placeholder="Lien (TikTok/YouTube) OU Fichier..." className="w-full pl-10 pr-4 py-4 rounded-2xl bg-[#09090b] border border-gray-200 focus:ring-4 focus:ring-[#00f2fe]/10 focus:border-[#00f2fe] outline-none text-sm transition-all shadow-sm" />
+                </div>
+                <div className="relative group">
+                  <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-[#00f2fe] transition-colors">
+                    <span className="font-bold text-sm">📁</span>
+                  </div>
+                  <input name="file" type="file" accept="audio/*,video/*" className="w-full pl-10 pr-4 py-4 rounded-2xl bg-[#09090b] border border-gray-200 focus:ring-4 focus:ring-[#00f2fe]/10 focus:border-[#00f2fe] outline-none text-sm transition-all shadow-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-[#00f2fe]/10 file:text-[#00f2fe] hover:file:bg-[#00f2fe]/20" />
                 </div>
 
 
