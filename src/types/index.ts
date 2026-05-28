@@ -9,9 +9,16 @@ export interface Player {
   offline?: boolean;
 }
 
-export interface Room {
+export type GameType = 'quialike' | 'imitmeme';
+
+export interface BaseRoom {
   code: string;
+  gameType: GameType;
   players: Player[];
+}
+
+export interface QuialikeRoom extends BaseRoom {
+  gameType: 'quialike';
   status: 'lobby' | 'playing' | 'results' | 'leaderboard' | 'ended';
   currentVideoIndex: number;
   videos: Video[];
@@ -20,9 +27,37 @@ export interface Room {
   };
   currentVotes: Record<string, { targetPlayerId: string; isCorrect: boolean; timeTaken: number }>;
   videoStartTime?: number;
-  playersLoadedVideo?: string[]; // IDs of players who have loaded the current video
+  playersLoadedVideo?: string[];
   previousScores?: Record<string, number>;
 }
+
+export interface ImitMemeMeme {
+  id: string;
+  url: string;
+  platform?: 'tiktok' | 'instagram' | 'youtube' | 'unknown';
+  videoId?: string;
+  duration: number;
+  submitterId: string;
+  recordings: Record<string, string>; // playerId -> base64 audio
+}
+
+export interface ImitMemeRoom extends BaseRoom {
+  gameType: 'imitmeme';
+  status: 'lobby' | 'playing_meme' | 'recording' | 'listening' | 'voting' | 'results' | 'leaderboard' | 'ended';
+  currentMemeIndex: number;
+  memes: ImitMemeMeme[];
+  settings: {
+    memesPerPlayer: number;
+  };
+  currentVotes: Record<string, string>; // voterId -> targetPlayerId (voted best imitation)
+  memeStartTime?: number;
+  playersLoadedMeme?: string[];
+  playersReadyForRecording?: string[];
+  previousScores?: Record<string, number>;
+  currentlyPlayingRecordingId?: string; // which player's recording is currently being played during 'listening'
+}
+
+export type Room = QuialikeRoom | ImitMemeRoom;
 
 export interface Video {
   id: string;

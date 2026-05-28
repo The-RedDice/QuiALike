@@ -14,14 +14,14 @@ export default function HubHome() {
       accent: "group-hover:border-[#00f2fe]/50"
     },
     {
-      id: "mystery-1",
-      title: "Blind Test",
-      description: "Le grand classique revisité. Préparez vos playlists.",
-      href: "#",
-      status: "coming_soon",
-      tags: ["Musique", "Rapide"],
-      gradient: "from-purple-500/10 to-blue-500/10",
-      accent: ""
+      id: "imitmeme",
+      title: "Imit'Mème",
+      description: "Refaites les pires audios d'internet et votez pour la meilleure imitation.",
+      href: "/imitmeme",
+      status: "active",
+      tags: ["Micro", "Délire"],
+      gradient: "from-purple-500/20 to-[#00f2fe]/20",
+      accent: "group-hover:border-purple-500/50"
     },
     {
       id: "mystery-2",
