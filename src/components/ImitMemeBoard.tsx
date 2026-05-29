@@ -28,7 +28,7 @@ export default function ImitMemeBoard({ room, user, socket }: ImitMemeBoardProps
 
 
   // States for visualizer
-  const [audioLevels, setAudioLevels] = useState<number[]>(Array(20).fill(0));
+  const barsRef = useRef<(HTMLDivElement | null)[]>([]);
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const sourceRef = useRef<MediaElementAudioSourceNode | null>(null);
@@ -48,12 +48,12 @@ export default function ImitMemeBoard({ room, user, socket }: ImitMemeBoardProps
               analyserRef.current = audioContextRef.current.createAnalyser();
               analyserRef.current.fftSize = 64; // Small size for ~20 bars
           }
-          // Only create source once per element
-          if (!sourceRef.current || (sourceRef.current.mediaElement !== audioElement)) {
-              if (sourceRef.current) sourceRef.current.disconnect();
-              sourceRef.current = audioContextRef.current.createMediaElementSource(audioElement);
-              sourceRef.current.connect(analyserRef.current);
+          // Ensure we only create a MediaElementSource once per HTMLMediaElement
+          if (!(audioElement as any)._hasAudioSource) {
+              const source = audioContextRef.current.createMediaElementSource(audioElement);
+              source.connect(analyserRef.current);
               analyserRef.current.connect(audioContextRef.current.destination);
+              (audioElement as any)._hasAudioSource = true;
           }
 
           const updateVisualizer = () => {
@@ -63,15 +63,19 @@ export default function ImitMemeBoard({ room, user, socket }: ImitMemeBoardProps
 
                   // Map frequencies to our 20 levels (0-100%)
                   const step = Math.floor(dataArray.length / 20);
-                  const newLevels = Array.from({ length: 20 }, (_, i) => {
+                  for (let i = 0; i < 20; i++) {
                       let sum = 0;
                       for (let j = 0; j < step; j++) {
                           sum += dataArray[i * step + j];
                       }
                       const avg = sum / step;
-                      return (avg / 255) * 100; // Convert to percentage
-                  });
-                  setAudioLevels(newLevels);
+                      const percent = Math.max(10, (avg / 255) * 100);
+
+                      const bar = barsRef.current[i];
+                      if (bar) {
+                          bar.style.height = `${percent}%`;
+                      }
+                  }
               }
               rafRef.current = requestAnimationFrame(updateVisualizer);
           };
@@ -89,7 +93,10 @@ export default function ImitMemeBoard({ room, user, socket }: ImitMemeBoardProps
           cancelAnimationFrame(rafRef.current);
           rafRef.current = null;
       }
-      setAudioLevels(Array(20).fill(0));
+      for (let i = 0; i < 20; i++) {
+          const bar = barsRef.current[i];
+          if (bar) bar.style.height = '10%';
+      }
   };
 
   // Simulated visualizer for iframes (cross-origin audio can't be analyzed)
@@ -101,26 +108,35 @@ export default function ImitMemeBoard({ room, user, socket }: ImitMemeBoardProps
 
       if (isSimulatedMeme || isRecording) {
           interval = setInterval(() => {
-              // Less chaotic random for simulation
-              setAudioLevels(prev => prev.map(l => {
-                  const target = Math.random() * 80 + 10;
-                  return l + (target - l) * 0.5;
-              }));
+              for (let i = 0; i < 20; i++) {
+                  const bar = barsRef.current[i];
+                  if (bar) {
+                      const currentHeight = parseFloat(bar.style.height || '10');
+                      const target = Math.random() * 80 + 10;
+                      bar.style.height = `${currentHeight + (target - currentHeight) * 0.5}%`;
+                  }
+              }
           }, 100);
       } else if (!isPlayingRecording && !(room.status === 'playing_meme' && currentMeme?.fileBase64)) {
-          // If not simulated, not playing recording, not playing file -> clear
-          setAudioLevels(Array(20).fill(0));
+          for (let i = 0; i < 20; i++) {
+              const bar = barsRef.current[i];
+              if (bar) bar.style.height = '10%';
+          }
       }
       return () => clearInterval(interval);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [room.status, isRecording, isPlayingRecording, currentMeme]);
 
 
+  // Track if we already emitted loaded to prevent infinite loops if re-rendered
+  const [hasEmittedLoaded, setHasEmittedLoaded] = useState(false);
+
   useEffect(() => {
       if (room.status === 'playing_meme') {
-          // Tell server we loaded the meme
-          socket.emit("meme-loaded", { roomCode: room.code, username: user.username });
-          // Time left sync for original meme playback
+          if (!hasEmittedLoaded) {
+              socket.emit("meme-loaded", { roomCode: room.code, username: user.username });
+              setHasEmittedLoaded(true);
+          }
           if (room.memeStartTime) {
               const elapsed = Math.floor((Date.now() - room.memeStartTime) / 1000);
               setTimeLeft(Math.max(0, currentMeme.duration - elapsed));
@@ -128,6 +144,7 @@ export default function ImitMemeBoard({ room, user, socket }: ImitMemeBoardProps
               setTimeLeft(currentMeme.duration);
           }
       } else if (room.status === 'recording') {
+          setHasEmittedLoaded(false);
           setTimeLeft(currentMeme.duration);
           startRecording();
       } else if (room.status === 'listening') {
@@ -243,12 +260,12 @@ export default function ImitMemeBoard({ room, user, socket }: ImitMemeBoardProps
 
                  {/* Visualizer Background */}
                  <div className="absolute inset-0 flex items-center justify-center gap-1 z-10 bg-black/80 backdrop-blur-sm pointer-events-none">
-                     {audioLevels.map((level, i) => (
-                         <motion.div
+                     {Array.from({ length: 20 }).map((_, i) => (
+                         <div
                             key={i}
                             className="w-2 md:w-3 bg-gradient-to-t from-[#00f2fe] to-[#fe2c55] rounded-full"
-                            animate={{ height: `${Math.max(10, level)}%` }}
-                            transition={{ type: "tween", duration: 0.1 }}
+                            ref={(el) => { barsRef.current[i] = el; }} style={{ height: "10%" }}
+
                          />
                      ))}
                  </div>
@@ -273,13 +290,13 @@ export default function ImitMemeBoard({ room, user, socket }: ImitMemeBoardProps
              )}
 
              {/* Audio Visualizer Overlay */}
-             <div className="absolute inset-0 flex items-center justify-center gap-1 z-10 bg-black/80 backdrop-blur-sm">
-                 {audioLevels.map((level, i) => (
-                     <motion.div
+             <div className="absolute inset-0 flex items-center justify-center gap-1 z-10 bg-black/80 backdrop-blur-sm pointer-events-none">
+                 {Array.from({ length: 20 }).map((_, i) => (
+                     <div
                         key={i}
-                        className="w-2 md:w-3 bg-gradient-to-t from-[#00f2fe] to-[#fe2c55] rounded-full"
-                        animate={{ height: `${Math.max(10, level)}%` }}
-                        transition={{ type: "tween", duration: 0.1 }}
+                        ref={(el) => { barsRef.current[i] = el; }}
+                        className="w-2 md:w-3 bg-gradient-to-t from-[#00f2fe] to-[#fe2c55] rounded-full transition-all duration-75"
+                        style={{ height: '10%' }}
                      />
                  ))}
              </div>
@@ -385,9 +402,7 @@ export default function ImitMemeBoard({ room, user, socket }: ImitMemeBoardProps
                                       {room.status === 'listening' && (
                                           <div className="flex gap-1 mt-2 h-4 items-end">
                                               {isCurrentlyPlaying ? (
-                                                  audioLevels.slice(0,10).map((lvl, i) => (
-                                                    <motion.div key={i} className="w-1.5 bg-[#00f2fe] rounded-t-full" animate={{height: `${Math.max(20, lvl)}%`}} />
-                                                  ))
+                                                  <div className="text-[#00f2fe] text-xs font-bold animate-pulse flex items-center gap-1"><Play size={12} fill="currentColor"/> En écoute...</div>
                                               ) : (
                                                   <div className="text-xs text-gray-500 flex items-center gap-1"><Play size={10}/> En attente</div>
                                               )}
