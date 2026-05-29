@@ -189,6 +189,14 @@ export default function ImitMemeBoard({ room, user, socket }: ImitMemeBoardProps
 
   const startRecording = async () => {
     try {
+      if (!window.isSecureContext) {
+          alert("Erreur: L'accès au microphone nécessite une connexion sécurisée (HTTPS).");
+          throw new Error("Insecure context");
+      }
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          alert("Erreur: Votre navigateur ne supporte pas l'enregistrement audio ou le bloque.");
+          throw new Error("getUserMedia not supported");
+      }
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mediaRecorder = new MediaRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
@@ -215,9 +223,11 @@ export default function ImitMemeBoard({ room, user, socket }: ImitMemeBoardProps
 
       mediaRecorder.start();
       setIsRecording(true);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error accessing mic:", err);
-      alert("Veuillez autoriser l'accès au microphone pour jouer !");
+      if (err.message !== "Insecure context" && err.message !== "getUserMedia not supported") {
+          alert("Veuillez autoriser l'accès au microphone pour jouer !");
+      }
       socket.emit("submit-recording", { roomCode: room.code, username: user.username, audioBase64: "" });
     }
   };
