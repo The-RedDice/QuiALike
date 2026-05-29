@@ -507,8 +507,13 @@ app.prepare().then(() => {
 
       const activePlayers = room.players.filter((p: any) => !p.offline);
       if (room.playersLoadedMeme.length >= activePlayers.length) {
-         room.memeStartTime = Date.now();
-         io.to(cleanCode).emit("start-playing-meme", { memeStartTime: room.memeStartTime });
+         if (!room.memeStartTime) {
+             room.memeStartTime = Date.now();
+             io.to(cleanCode).emit("start-playing-meme", { memeStartTime: room.memeStartTime });
+         } else {
+             // Already started, just send the existing time to the specific player who just loaded it late
+             socket.emit("start-playing-meme", { memeStartTime: room.memeStartTime });
+         }
       }
     });
 
