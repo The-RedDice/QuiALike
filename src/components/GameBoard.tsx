@@ -29,7 +29,6 @@ export default function GameBoard({ room, user, socket }: GameBoardProps) {
       correctPlayerIds: string[]
   } | null>(() => isResultsPhase ? { results: room.currentVotes, correctPlayerIds: currentVideo.correctPlayerIds } : null);
   const [votedCount, setVotedCount] = useState(() => Object.keys(room.currentVotes || {}).length);
-  const [videoLoaded, setVideoLoaded] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Track `revealed` in a ref so we can read it inside updateTimer without adding it to the dependency array
@@ -47,7 +46,6 @@ export default function GameBoard({ room, user, socket }: GameBoardProps) {
       setRevealData(null);
       setVotedCount(Object.keys(room.currentVotes || {}).length);
       setTimeLeft(30);
-      setVideoLoaded(false);
     } else if (room.status === 'results') {
       setHasVoted(true);
       setRevealed(true);
@@ -60,12 +58,10 @@ export default function GameBoard({ room, user, socket }: GameBoardProps) {
     }
 
     if (room.status === 'playing' && room.videoStartTime) {
-        // Purely local relative timer to avoid client-server clock skew issues
-        // We use the exact moment we receive the videoStartTime (which is now) to start our local timer
-        const startTimeLocal = Date.now();
-
         const updateTimer = () => {
-          const elapsed = Math.floor((Date.now() - startTimeLocal) / 1000);
+          // Use absolute server timestamp to calculate exactly how much time is left
+          // This ensures perfect sync even if the page is refreshed mid-round
+          const elapsed = Math.floor((Date.now() - room.videoStartTime!) / 1000);
           const remaining = Math.max(0, 30 - elapsed);
           setTimeLeft(remaining);
 
@@ -103,22 +99,6 @@ export default function GameBoard({ room, user, socket }: GameBoardProps) {
       socket.off("player-voted", handlePlayerVoted);
     };
   }, [room.currentVideoIndex, socket, user.isHost, room.code, room.videoStartTime]); // Removed 'revealed' from dependencies to prevent infinite loops
-
-  useEffect(() => {
-    if (!videoLoaded && room.status === 'playing') {
-      const timer = setTimeout(() => {
-        // Auto mark as loaded after a fallback timeout if iframe onload fails or takes too long
-        handleVideoLoad();
-      }, 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [videoLoaded, room.status, room.currentVideoIndex]);
-
-  const handleVideoLoad = () => {
-    if (videoLoaded) return;
-    setVideoLoaded(true);
-    socket.emit("video-loaded", { roomCode: room.code, username: user.username });
-  };
 
   const submitVote = (targetPlayerId: string) => {
     if (hasVoted || timeLeft === 0 || revealed || !room.videoStartTime) return;
@@ -299,7 +279,6 @@ export default function GameBoard({ room, user, socket }: GameBoardProps) {
               src={`https://www.tiktok.com/embed/v2/${currentVideo.videoId}`}
               className={`w-full h-full border-0 pointer-events-auto ${!room.videoStartTime ? 'opacity-0' : 'opacity-100'}`}
               allow="autoplay; fullscreen"
-              onLoad={handleVideoLoad}
             />
         ) : currentVideo.platform === 'instagram' && currentVideo.videoId ? (
             <iframe
@@ -307,7 +286,6 @@ export default function GameBoard({ room, user, socket }: GameBoardProps) {
               src={`https://www.instagram.com/reel/${currentVideo.videoId}/embed`}
               className={`w-full h-full border-0 pointer-events-auto ${!room.videoStartTime ? 'opacity-0' : 'opacity-100'}`}
               allow="autoplay; fullscreen"
-              onLoad={handleVideoLoad}
             />
         ) : currentVideo.platform === 'youtube' && currentVideo.videoId ? (
             <iframe
@@ -315,7 +293,6 @@ export default function GameBoard({ room, user, socket }: GameBoardProps) {
               src={`https://www.youtube.com/embed/${currentVideo.videoId}?autoplay=1&loop=1&playlist=${currentVideo.videoId}&controls=0`}
               className={`w-full h-full border-0 pointer-events-auto ${!room.videoStartTime ? 'opacity-0' : 'opacity-100'}`}
               allow="autoplay; fullscreen"
-              onLoad={handleVideoLoad}
             />
         ) : (
             <video
@@ -325,15 +302,7 @@ export default function GameBoard({ room, user, socket }: GameBoardProps) {
               autoPlay
               loop
               playsInline
-              onLoadedData={handleVideoLoad}
             />
-        )}
-
-        {!room.videoStartTime && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 z-20 gap-4">
-                <Loader2 size={32} className="animate-spin text-white" />
-                <span className="text-white font-bold text-sm tracking-widest uppercase">Chargement...</span>
-            </div>
         )}
 
         {/* Transparent overlay allowing clicks to pass through so the user can interact (e.g. click to play video iframe) */}

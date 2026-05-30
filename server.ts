@@ -264,31 +264,9 @@ app.prepare().then(() => {
           room.previousScores![p.id] = p.score;
       });
 
-      room.playersLoadedVideo = [];
-      // videoStartTime will be set when all players load the video
-      room.videoStartTime = undefined;
+      // videoStartTime is set immediately
+      room.videoStartTime = Date.now();
       io.to(cleanCode).emit("game-started", room);
-    });
-
-    socket.on("video-loaded", ({ roomCode, username }: { roomCode: string, username: string }) => {
-      const cleanCode = roomCode.toUpperCase();
-      const room = rooms.get(cleanCode) as any;
-      if (!room || room.status !== 'playing') return;
-
-      const player = room.players.find((p: any) => p.username === username);
-      if (!player) return;
-
-      if (!room.playersLoadedVideo) room.playersLoadedVideo = [];
-      if (!room.playersLoadedVideo.includes(player.id)) {
-        room.playersLoadedVideo.push(player.id);
-      }
-
-      // Check if all connected players have loaded the video
-      const activePlayers = room.players.filter((p: any) => !p.offline);
-      if (room.playersLoadedVideo.length >= activePlayers.length) {
-         room.videoStartTime = Date.now();
-         io.to(cleanCode).emit("start-voting", { videoStartTime: room.videoStartTime });
-      }
     });
 
     socket.on("submit-vote", ({ roomCode, targetPlayerId, timeTaken, username }: { roomCode: string, targetPlayerId: string, timeTaken: number, username: string }) => {
@@ -382,8 +360,7 @@ app.prepare().then(() => {
             room.previousScores![p.id] = p.score;
         });
 
-        room.playersLoadedVideo = [];
-        room.videoStartTime = undefined;
+        room.videoStartTime = Date.now();
         room.status = 'playing'; // explicitly set to playing for next round sync
         // Emit full room-updated to ensure currentVotes state is synced across clients
         io.to(cleanCode).emit("room-updated", room);
