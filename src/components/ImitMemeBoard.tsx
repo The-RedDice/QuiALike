@@ -19,6 +19,14 @@ export default function ImitMemeBoard({ room, user, socket }: ImitMemeBoardProps
   // States for recording
   const [isRecording, setIsRecording] = useState(false);
   const [timeLeft, setTimeLeft] = useState(currentMeme?.duration || 15);
+  const [isAdvancing, setIsAdvancing] = useState(false);
+
+  const nextMeme = () => {
+    if (isAdvancing) return;
+    setIsAdvancing(true);
+    socket.emit("next-meme", room.code);
+    setTimeout(() => setIsAdvancing(false), 2000);
+  };
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<BlobPart[]>([]);
 
@@ -128,15 +136,8 @@ export default function ImitMemeBoard({ room, user, socket }: ImitMemeBoardProps
   }, [room.status, isRecording, isPlayingRecording, currentMeme]);
 
 
-  // Track if we already emitted loaded to prevent infinite loops if re-rendered
-  const [hasEmittedLoaded, setHasEmittedLoaded] = useState(false);
-
   useEffect(() => {
       if (room.status === 'playing_meme') {
-          if (!hasEmittedLoaded) {
-              socket.emit("meme-loaded", { roomCode: room.code, username: user.username });
-              setHasEmittedLoaded(true);
-          }
           if (room.memeStartTime) {
               const elapsed = Math.floor((Date.now() - room.memeStartTime) / 1000);
               setTimeLeft(Math.max(0, currentMeme.duration - elapsed));
@@ -144,7 +145,6 @@ export default function ImitMemeBoard({ room, user, socket }: ImitMemeBoardProps
               setTimeLeft(currentMeme.duration);
           }
       } else if (room.status === 'recording') {
-          setHasEmittedLoaded(false);
           setTimeLeft(currentMeme.duration);
           startRecording();
       } else if (room.status === 'listening') {
@@ -313,11 +313,6 @@ export default function ImitMemeBoard({ room, user, socket }: ImitMemeBoardProps
              <div className="absolute top-4 right-4 bg-black/50 text-white px-4 py-2 rounded-full font-mono text-xl z-20 font-bold tracking-widest backdrop-blur-md">
                 00:{timeLeft.toString().padStart(2, '0')}
              </div>
-             {room.status === 'playing_meme' && !room.memeStartTime && (
-                 <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/80 backdrop-blur-md">
-                    <span className="text-white font-black animate-pulse text-xl">En attente des joueurs...</span>
-                 </div>
-             )}
           </div>
       );
   };
@@ -467,7 +462,7 @@ export default function ImitMemeBoard({ room, user, socket }: ImitMemeBoardProps
                   </div>
 
                   {user.isHost && (
-                      <button onClick={() => socket.emit("next-meme", room.code)} className="w-full py-5 bg-white text-black font-black text-xl rounded-full mt-8 hover:scale-[1.02] transition-transform">
+                      <button disabled={isAdvancing} onClick={nextMeme} className={`w-full py-5 text-black font-black text-xl rounded-full mt-8 transition-transform ${isAdvancing ? 'bg-gray-400 cursor-not-allowed' : 'bg-white hover:scale-[1.02]'}`}>
                           MÈME SUIVANT
                       </button>
                   )}

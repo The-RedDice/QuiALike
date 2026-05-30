@@ -403,6 +403,11 @@ app.prepare().then(() => {
       const player = room.players.find((p: any) => p.username === username);
       if (!player) return;
 
+      // Prevent duplicate submissions adding to the array infinitely
+      if (player.hasSubmittedVideos) {
+         return;
+      }
+
       player.socketId = socket.id;
       player.hasSubmittedVideos = true;
 
@@ -478,34 +483,8 @@ app.prepare().then(() => {
           room.previousScores[p.id] = p.score;
       });
 
-      room.playersLoadedMeme = [];
-      room.memeStartTime = undefined;
+      room.memeStartTime = Date.now();
       io.to(cleanCode).emit("imitmeme-game-started", room);
-    });
-
-    socket.on("meme-loaded", ({ roomCode, username }: { roomCode: string, username: string }) => {
-      const cleanCode = roomCode.toUpperCase();
-      const room = rooms.get(cleanCode) as any;
-      if (!room || room.gameType !== 'imitmeme' || room.status !== 'playing_meme') return;
-
-      const player = room.players.find((p: any) => p.username === username);
-      if (!player) return;
-
-      if (!room.playersLoadedMeme) room.playersLoadedMeme = [];
-      if (!room.playersLoadedMeme.includes(player.id)) {
-        room.playersLoadedMeme.push(player.id);
-      }
-
-      const activePlayers = room.players.filter((p: any) => !p.offline);
-      if (room.playersLoadedMeme.length >= activePlayers.length) {
-         if (!room.memeStartTime) {
-             room.memeStartTime = Date.now();
-             io.to(cleanCode).emit("start-playing-meme", { memeStartTime: room.memeStartTime });
-         } else {
-             // Already started, just send the existing time to the specific player who just loaded it late
-             socket.emit("start-playing-meme", { memeStartTime: room.memeStartTime });
-         }
-      }
     });
 
     socket.on("start-recording-phase", (roomCode: string) => {
@@ -575,6 +554,7 @@ app.prepare().then(() => {
       if (!voter) return;
 
       if (voter.id === targetPlayerId) return;
+      if (room.currentVotes[voter.id]) return; // Prevent double voting
 
       room.currentVotes[voter.id] = targetPlayerId;
       io.to(cleanCode).emit("player-voted");
@@ -599,6 +579,8 @@ app.prepare().then(() => {
       const room = rooms.get(cleanCode) as any;
       if (!room || room.gameType !== 'imitmeme' || room.players[0].socketId !== socket.id) return;
 
+      if (room.status !== 'results') return;
+
       if (room.currentMemeIndex < room.memes.length - 1) {
         room.currentMemeIndex++;
         room.currentVotes = {};
@@ -606,9 +588,8 @@ app.prepare().then(() => {
         room.players.forEach((p: any) => {
             room.previousScores[p.id] = p.score;
         });
-        room.playersLoadedMeme = [];
         room.playersReadyForRecording = [];
-        room.memeStartTime = undefined;
+        room.memeStartTime = Date.now();
         room.status = 'playing_meme';
         io.to(cleanCode).emit("room-updated", room);
         io.to(cleanCode).emit("next-meme", { currentMemeIndex: room.currentMemeIndex });
