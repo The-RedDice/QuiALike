@@ -211,8 +211,13 @@ export default function Home() {
                 e.preventDefault();
                 const formData = new FormData(e.currentTarget);
                 const urls = [formData.get('url1') as string, formData.get('url2') as string, formData.get('url3') as string].filter(Boolean);
-                if (urls.length > 0 && socket) {
+                if (urls.length > 0 && socket && !user?.hasSubmittedVideos) {
                   socket.emit("submit-videos", { roomCode: room.code, videoUrls: urls, username: profile.username });
+                  // Immediate optimistic UI update to disable button
+                  if (user) {
+                     user.hasSubmittedVideos = true;
+                     setUser({ ...user });
+                  }
                 }
               }}
               className="relative space-y-4 mb-10 p-6 bg-gradient-to-br from-[#fe2c55]/10 to-[#18181b] border-2 border-[#fe2c55]/20 rounded-[2rem] shadow-inner animate-in fade-in slide-in-from-bottom-8 duration-700"

@@ -166,6 +166,11 @@ app.prepare().then(() => {
          return;
       }
 
+      // Prevent duplicate submissions adding to the array infinitely
+      if (player.hasSubmittedVideos) {
+         return;
+      }
+
       // Update their socketId just in case it was out of sync
       player.socketId = socket.id;
 
@@ -294,6 +299,11 @@ app.prepare().then(() => {
       const votingPlayer = room.players.find((p: any) => p.username === username);
       if (!votingPlayer) return;
 
+      // Prevent double voting in the same round
+      if (room.currentVotes[votingPlayer.id]) {
+        return;
+      }
+
       const currentVideo = room.videos[room.currentVideoIndex];
 
       // Prevent the owner of the video from voting, and prevent voting for oneself
@@ -358,6 +368,10 @@ app.prepare().then(() => {
       const cleanCode = roomCode.toUpperCase();
       const room = rooms.get(cleanCode) as any;
       if (!room || room.players[0].socketId !== socket.id) return;
+
+      // Prevent advancing if not currently in leaderboard phase
+      // This stops double clicks from skipping rounds or flickering
+      if (room.status !== 'leaderboard') return;
 
       if (room.currentVideoIndex < room.videos.length - 1) {
         room.currentVideoIndex++;

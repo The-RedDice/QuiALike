@@ -131,8 +131,12 @@ export default function GameBoard({ room, user, socket }: GameBoardProps) {
     socket.emit("submit-vote", { roomCode: room.code, targetPlayerId, timeTaken, username: user.username });
   };
 
+  const [isAdvancing, setIsAdvancing] = useState(false);
   const nextVideo = () => {
+    if (isAdvancing) return;
+    setIsAdvancing(true);
     socket.emit("next-video", room.code);
+    setTimeout(() => setIsAdvancing(false), 2000);
   };
 
 
@@ -211,7 +215,8 @@ export default function GameBoard({ room, user, socket }: GameBoardProps) {
           {user.isHost ? (
             <button
               onClick={nextVideo}
-              className="w-full max-w-md mx-auto py-6 bg-white text-[#09090b] rounded-3xl font-black text-lg hover:scale-[1.02] transition-all flex items-center justify-center gap-2"
+              disabled={isAdvancing}
+              className={`w-full max-w-md mx-auto py-6 rounded-3xl font-black text-lg transition-all flex items-center justify-center gap-2 ${isAdvancing ? 'bg-gray-400 text-gray-700 cursor-not-allowed' : 'bg-white text-[#09090b] hover:scale-[1.02]'}`}
             >
               {room.currentVideoIndex < room.videos.length - 1 ? 'CONTINUER' : 'PODIUM FINAL'}
               <ArrowRight size={20} />
