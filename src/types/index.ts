@@ -9,7 +9,7 @@ export interface Player {
   offline?: boolean;
 }
 
-export type GameType = 'quialike' | 'imitmeme';
+export type GameType = 'quialike' | 'imitmeme' | 'tiktokdubbing';
 
 export interface BaseRoom {
   code: string;
@@ -58,7 +58,35 @@ export interface ImitMemeRoom extends BaseRoom {
   currentlyPlayingRecordingId?: string; // which player's recording is currently being played during 'listening'
 }
 
-export type Room = QuialikeRoom | ImitMemeRoom;
+
+export interface TikTokDubbingVideo {
+  id: string;
+  url: string;
+  platform?: 'tiktok' | 'instagram' | 'youtube' | 'unknown';
+  videoId?: string;
+  duration: number;
+  submitterId: string;
+  recordings: Record<string, string>; // playerId -> base64 audio
+}
+
+export interface TikTokDubbingRoom extends BaseRoom {
+  gameType: 'tiktokdubbing';
+  status: 'lobby' | 'playing_video' | 'recording' | 'listening' | 'voting' | 'results' | 'leaderboard' | 'ended';
+  currentVideoIndex: number;
+  videos: TikTokDubbingVideo[];
+  settings: {
+    videosPerPlayer: number;
+  };
+  currentVotes: Record<string, string>; // voterId -> targetPlayerId (voted best dubbing)
+  videoStartTime?: number;
+  playersLoadedVideo?: string[];
+  playersReadyForRecording?: string[];
+  previousScores?: Record<string, number>;
+  currentlyPlayingRecordingId?: string; // which player's dubbing is currently being played during 'listening'
+}
+
+export type Room = QuialikeRoom | ImitMemeRoom | TikTokDubbingRoom;
+
 
 export interface Video {
   id: string;

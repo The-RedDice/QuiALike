@@ -8,6 +8,7 @@ import { Users, Play, ArrowLeft } from "lucide-react";
 import GameBoard from "@/components/GameBoard";
 import Login from "@/components/Login";
 import { ChatInput, useChatBubbles, ChatBubble } from "@/components/ChatBubble";
+import { Reactions } from "@/components/Reactions";
 
 export default function Home() {
   const { socket, connected } = useSocket();
@@ -307,6 +308,7 @@ export default function Home() {
           )}
         </div>
         {socket && <ChatInput socket={socket} roomCode={room.code} username={profile.username} />}
+        {socket && <Reactions socket={socket} roomCode={room.code} />}
       </div>
     );
   }
