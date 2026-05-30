@@ -6,6 +6,7 @@ import { ImitMemeRoom, Player } from "@/types";
 import { Socket } from "socket.io-client";
 import { Users, Mic, Play, Award } from "lucide-react";
 import { motion } from "framer-motion";
+import { ChatInput, ChatBubble, useChatBubbles } from "./ChatBubble";
 
 interface ImitMemeBoardProps {
   room: ImitMemeRoom;
@@ -29,6 +30,7 @@ export default function ImitMemeBoard({ room, user, socket }: ImitMemeBoardProps
   };
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<BlobPart[]>([]);
+  const chatBubbles = useChatBubbles(socket);
 
   // States for playback
   const audioPlayerRef = useRef<HTMLAudioElement | null>(null);
@@ -400,7 +402,10 @@ export default function ImitMemeBoard({ room, user, socket }: ImitMemeBoardProps
                                       <motion.div className="absolute inset-0 bg-[#00f2fe]/5" layoutId="playingHighlight" />
                                   )}
 
-                                  <img src={p.avatar} alt="" className="w-16 h-16 rounded-full ring-2 ring-white/20 relative z-10" />
+                                  <div className="relative z-10">
+                                      <img src={p.avatar} alt="" className="w-16 h-16 rounded-full ring-2 ring-white/20" />
+                                      {chatBubbles[p.username] && <ChatBubble text={chatBubbles[p.username].text} />}
+                                  </div>
 
                                   <div className="flex-1 text-left relative z-10">
                                       <h3 className="font-black text-xl">{p.username}</h3>
@@ -447,7 +452,10 @@ export default function ImitMemeBoard({ room, user, socket }: ImitMemeBoardProps
                           return (
                               <div key={p.id} className="bg-white/10 p-4 rounded-3xl flex items-center gap-4">
                                   <div className="text-2xl font-black text-gray-500 w-8 text-center">#{idx + 1}</div>
-                                  <img src={p.avatar} alt="" className="w-14 h-14 rounded-full ring-2 ring-white" />
+                                  <div className="relative">
+                                      <img src={p.avatar} alt="" className="w-14 h-14 rounded-full ring-2 ring-white" />
+                                      {chatBubbles[p.username] && <ChatBubble text={chatBubbles[p.username].text} />}
+                                  </div>
                                   <div className="flex-1">
                                       <span className="font-black text-xl">{p.username}</span>
                                       <div className="text-sm text-gray-400">{votesReceived} votes</div>
@@ -479,7 +487,10 @@ export default function ImitMemeBoard({ room, user, socket }: ImitMemeBoardProps
                       {room.players.sort((a,b) => b.score - a.score).map((p, idx) => (
                           <div key={p.id} className="flex items-center gap-6 mb-4 last:mb-0">
                               <span className="text-3xl font-black text-gray-500">#{idx + 1}</span>
-                              <img src={p.avatar} alt="" className="w-16 h-16 rounded-full" />
+                              <div className="relative">
+                                  <img src={p.avatar} alt="" className="w-16 h-16 rounded-full" />
+                                  {chatBubbles[p.username] && <ChatBubble text={chatBubbles[p.username].text} />}
+                              </div>
                               <div>
                                   <div className="font-black text-2xl">{p.username}</div>
                                   <div className="text-[#00f2fe] font-black">{p.score} pts</div>
@@ -495,6 +506,7 @@ export default function ImitMemeBoard({ room, user, socket }: ImitMemeBoardProps
           )}
 
       </main>
+      <ChatInput socket={socket} roomCode={room.code} username={user.username} />
     </div>
   );
 }
