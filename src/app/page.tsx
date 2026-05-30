@@ -1,7 +1,29 @@
+"use client";
+
 import Link from "next/link";
 import { Gamepad2, Sparkles, Lock } from "lucide-react";
+import { useEffect, useState } from "react";
+import { io } from "socket.io-client";
 
 export default function HubHome() {
+  const [onlineUsers, setOnlineUsers] = useState<number | null>(null);
+
+  useEffect(() => {
+    // Only connect briefly on the hub to get stats
+    const socket = io(process.env.NEXT_PUBLIC_SOCKET_URL || "", {
+       path: "/socket.io/",
+       transports: ["websocket"],
+    });
+
+    socket.on("global-stats", (stats: { connectedUsers: number }) => {
+       setOnlineUsers(stats.connectedUsers);
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
+
   const games = [
     {
       id: "quialike",
@@ -44,9 +66,20 @@ export default function HubHome() {
 
         {/* Header */}
         <div className="text-center space-y-4 animate-in fade-in slide-in-from-bottom-6 duration-700">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs font-black tracking-widest text-gray-400 uppercase mb-4">
-            <Sparkles size={14} className="text-yellow-400" />
-            <span>Party Games Hub</span>
+          <div className="flex justify-center items-center gap-4 mb-4">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs font-black tracking-widest text-gray-400 uppercase">
+                <Sparkles size={14} className="text-yellow-400" />
+                <span>Party Games Hub</span>
+              </div>
+              {onlineUsers !== null && (
+                  <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-500/10 border border-green-500/20 text-xs font-black tracking-widest text-green-400 uppercase">
+                      <div className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                      </div>
+                      <span>{onlineUsers} en ligne</span>
+                  </div>
+              )}
           </div>
           <h1 className="text-5xl md:text-7xl font-black italic tracking-tighter uppercase leading-none">
             La Soirée<br />

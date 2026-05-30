@@ -7,6 +7,7 @@ import { Room, Player } from "@/types";
 import { Users, Play, ArrowLeft } from "lucide-react";
 import GameBoard from "@/components/GameBoard";
 import Login from "@/components/Login";
+import { ChatInput, useChatBubbles, ChatBubble } from "@/components/ChatBubble";
 
 export default function Home() {
   const { socket, connected } = useSocket();
@@ -142,6 +143,8 @@ export default function Home() {
     }
   };
 
+  const chatBubbles = useChatBubbles(socket!);
+
   if (room && (room.status === 'playing' || room.status === 'results' || room.status === 'leaderboard' || room.status === 'ended')) {
       if (!user || !socket) return null;
       return <GameBoard room={room as any} user={user} socket={socket} />;
@@ -191,6 +194,7 @@ export default function Home() {
                       <span className="text-white text-[10px]">✓</span>
                     </div>
                   )}
+                  {chatBubbles[p.username] && <ChatBubble text={chatBubbles[p.username].text} />}
                 </div>
                 <div className="flex flex-col">
                   <span className="font-black text-lg text-white group-hover:text-white transition-colors">
@@ -302,6 +306,7 @@ export default function Home() {
             </div>
           )}
         </div>
+        {socket && <ChatInput socket={socket} roomCode={room.code} username={profile.username} />}
       </div>
     );
   }

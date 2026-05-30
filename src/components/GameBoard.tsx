@@ -6,6 +6,7 @@ import { QuialikeRoom, Player } from "@/types";
 import { Timer, CheckCircle2, XCircle, Trophy, ArrowRight, Loader2, ArrowLeft } from "lucide-react";
 import { Socket } from "socket.io-client";
 import { motion } from "framer-motion";
+import { useChatBubbles, ChatBubble, ChatInput } from "./ChatBubble";
 
 interface GameBoardProps {
   room: QuialikeRoom;
@@ -30,6 +31,7 @@ export default function GameBoard({ room, user, socket }: GameBoardProps) {
   } | null>(() => isResultsPhase ? { results: room.currentVotes, correctPlayerIds: currentVideo.correctPlayerIds } : null);
   const [votedCount, setVotedCount] = useState(() => Object.keys(room.currentVotes || {}).length);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const chatBubbles = useChatBubbles(socket);
 
   // Track `revealed` in a ref so we can read it inside updateTimer without adding it to the dependency array
   const revealedRef = useRef(isResultsPhase);
@@ -170,8 +172,11 @@ export default function GameBoard({ room, user, socket }: GameBoardProps) {
                   `}>
                       {index + 1}
                   </div>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={p.avatar} alt={p.username} className="w-12 h-12 rounded-full ring-2 ring-white/20" />
+                  <div className="relative">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={p.avatar} alt={p.username} className="w-12 h-12 rounded-full ring-2 ring-white/20" />
+                      {chatBubbles[p.username] && <ChatBubble text={chatBubbles[p.username].text} />}
+                  </div>
                   <span className="font-bold text-xl flex-1 text-left truncate">@{p.username}</span>
 
                   <div className="text-right flex flex-col">
@@ -243,8 +248,11 @@ export default function GameBoard({ room, user, socket }: GameBoardProps) {
                 `}>
                     {index + 1}
                 </div>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={p.avatar} alt={p.username} className="w-12 h-12 rounded-full ring-2 ring-white/20" />
+                <div className="relative">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={p.avatar} alt={p.username} className="w-12 h-12 rounded-full ring-2 ring-white/20" />
+                    {chatBubbles[p.username] && <ChatBubble text={chatBubbles[p.username].text} />}
+                </div>
                 <span className="font-bold text-xl flex-1 text-left truncate">@{p.username}</span>
                 <span className={`font-black text-xl ${index === 0 ? 'text-yellow-400' : 'text-white'}`}>{p.score}</span>
               </div>
@@ -362,6 +370,7 @@ export default function GameBoard({ room, user, socket }: GameBoardProps) {
                 <div className="relative">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={p.avatar} alt={p.username} className="w-14 h-14 rounded-full ring-4 ring-white shadow-sm" />
+                    {chatBubbles[p.username] && <ChatBubble text={chatBubbles[p.username].text} />}
                     {revealed && isCorrect && (
                         <div className="absolute -top-1 -right-1 bg-green-500 text-white rounded-full p-1 shadow-lg">
                             <CheckCircle2 size={14} />
@@ -443,6 +452,7 @@ export default function GameBoard({ room, user, socket }: GameBoardProps) {
           </div>
         )}
       </div>
+      <ChatInput socket={socket} roomCode={room.code} username={user.username} />
     </div>
   );
 }

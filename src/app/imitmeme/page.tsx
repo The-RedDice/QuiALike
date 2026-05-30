@@ -7,6 +7,7 @@ import { Room, Player } from "@/types";
 import { Users, Play, ArrowLeft } from "lucide-react";
 import ImitMemeBoard from "@/components/ImitMemeBoard";
 import Login from "@/components/Login";
+import { ChatInput, useChatBubbles, ChatBubble } from "@/components/ChatBubble";
 
 export default function ImitMemeHome() {
   const { socket, connected } = useSocket();
@@ -159,6 +160,8 @@ export default function ImitMemeHome() {
     }
   };
 
+  const chatBubbles = useChatBubbles(socket!);
+
   if (room && ["playing_meme", "recording", "listening", "voting", "results", "leaderboard", "ended"].includes(room.status)) {
       if (!user || !socket) return null;
       return <ImitMemeBoard room={room as any} user={user} socket={socket} />;
@@ -208,6 +211,7 @@ export default function ImitMemeHome() {
                       <span className="text-white text-[10px]">✓</span>
                     </div>
                   )}
+                  {chatBubbles[p.username] && <ChatBubble text={chatBubbles[p.username].text} />}
                 </div>
                 <div className="flex flex-col">
                   <span className="font-black text-lg text-white group-hover:text-white transition-colors">
@@ -328,6 +332,7 @@ export default function ImitMemeHome() {
             </div>
           )}
         </div>
+        {socket && <ChatInput socket={socket} roomCode={room.code} username={profile.username} />}
       </div>
     );
   }

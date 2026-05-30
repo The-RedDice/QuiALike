@@ -41,6 +41,10 @@ app.prepare().then(() => {
 
   io.on("connection", (socket) => {
     console.log("New connection:", socket.id);
+
+    // Broadcast total connected users count globally
+    io.emit("global-stats", { connectedUsers: io.engine.clientsCount });
+
     socket.on("create-room", ({ gameType = "quialike", ...userData }: { username: string, avatar: string, gameType?: "quialike" | "imitmeme" }) => {
       console.log(`Create ${gameType} room requested by:`, userData.username);
       const roomCode = nanoid(6).toUpperCase();
@@ -312,6 +316,25 @@ app.prepare().then(() => {
       // Check if everyone (who is allowed to vote) has voted
       const expectedVoters = room.players.filter((p: any) => !currentVideo.correctPlayerIds.includes(p.id)).length;
       if (Object.keys(room.currentVotes).length >= expectedVoters) {
+        // Calculate points for the video owner based on incorrect votes
+        // The owner can gain up to 1000 points if EVERYONE is wrong
+        const bonusPerError = expectedVoters > 0 ? Math.floor(1000 / expectedVoters) : 0;
+        let errorsCount = 0;
+
+        Object.values(room.currentVotes).forEach((vote: any) => {
+            if (!vote.isCorrect) errorsCount++;
+        });
+
+        if (errorsCount > 0) {
+            currentVideo.correctPlayerIds.forEach((ownerId: string) => {
+                const owner = room.players.find((p: any) => p.id === ownerId);
+                if (owner) {
+                    owner.score += (bonusPerError * errorsCount);
+                }
+            });
+        }
+
+        room.status = 'results';
         io.to(cleanCode).emit("results-revealed", {
             results: room.currentVotes,
             correctPlayerIds: currentVideo.correctPlayerIds,
@@ -326,6 +349,26 @@ app.prepare().then(() => {
         if (!room || room.status !== 'playing') return;
 
         const currentVideo = room.videos[room.currentVideoIndex];
+        const expectedVoters = room.players.filter((p: any) => !currentVideo.correctPlayerIds.includes(p.id)).length;
+
+        // Calculate points for the video owner based on incorrect votes
+        const bonusPerError = expectedVoters > 0 ? Math.floor(1000 / expectedVoters) : 0;
+        let errorsCount = 0;
+
+        Object.values(room.currentVotes).forEach((vote: any) => {
+            if (!vote.isCorrect) errorsCount++;
+        });
+
+        if (errorsCount > 0) {
+            currentVideo.correctPlayerIds.forEach((ownerId: string) => {
+                const owner = room.players.find((p: any) => p.id === ownerId);
+                if (owner) {
+                    owner.score += (bonusPerError * errorsCount);
+                }
+            });
+        }
+
+        room.status = 'results';
         io.to(cleanCode).emit("results-revealed", {
             results: room.currentVotes,
             correctPlayerIds: currentVideo.correctPlayerIds,
@@ -599,7 +642,28 @@ app.prepare().then(() => {
       }
     });
 
+    socket.on("send-chat-bubble", ({ roomCode, text, username }: { roomCode: string, text: string, username: string }) => {
+      const cleanCode = roomCode.toUpperCase();
+      const room = rooms.get(cleanCode) as any;
+      if (!room) return;
+
+      const player = room.players.find((p: any) => p.username === username);
+      if (!player) return;
+
+      // Calculate duration based on text length, min 3s, max 8s
+      const duration = Math.min(8000, Math.max(3000, text.length * 100));
+
+      io.to(cleanCode).emit("show-chat-bubble", {
+          username: player.username,
+          text: text.substring(0, 100), // Max 100 chars
+          duration
+      });
+    });
+
     socket.on("disconnect", () => {
+      // Update global count
+      io.emit("global-stats", { connectedUsers: io.engine.clientsCount });
+
       rooms.forEach((room, roomCode) => {
         const player = room.players.find((p: any) => p.socketId === socket.id);
         if (player) {
