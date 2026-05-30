@@ -45,7 +45,7 @@ app.prepare().then(() => {
     // Broadcast total connected users count globally
     io.emit("global-stats", { connectedUsers: io.engine.clientsCount });
 
-    socket.on("create-room", ({ gameType = "quialike", ...userData }: { username: string, avatar: string, gameType?: "quialike" | "imitmeme" }) => {
+    socket.on("create-room", ({ gameType = "quialike", ...userData }: { username: string, avatar: string, gameType?: "quialike" | "imitmeme" | "tiktokdubbing" }) => {
       console.log(`Create ${gameType} room requested by:`, userData.username);
       const roomCode = nanoid(6).toUpperCase();
       const host: Player = {
@@ -59,7 +59,20 @@ app.prepare().then(() => {
       };
 
       let room: any;
-      if (gameType === 'imitmeme') {
+      if (gameType === 'tiktokdubbing') {
+        room = {
+          code: roomCode,
+          gameType: 'tiktokdubbing',
+          players: [host],
+          status: 'lobby',
+          currentVideoIndex: 0,
+          videos: [],
+          settings: {
+            videosPerPlayer: 1
+          },
+          currentVotes: {}
+        };
+      } else if (gameType === 'imitmeme') {
         room = {
           code: roomCode,
           gameType: 'imitmeme',
@@ -660,7 +673,190 @@ app.prepare().then(() => {
       });
     });
 
-    socket.on("disconnect", () => {
+
+    // --- TIKTOK DUBBING ---
+
+    socket.on("submit-tiktokdubbing-video", async ({ roomCode, url, duration, username }: { roomCode: string, url: string, duration: string, username: string }) => {
+      const cleanCode = roomCode.toUpperCase();
+      const room = rooms.get(cleanCode) as any;
+      if (!room || room.gameType !== 'tiktokdubbing' || room.status !== 'lobby') return;
+
+      const player = room.players.find((p: any) => p.username === username);
+      if (!player) return;
+
+      if (player.hasSubmittedVideos) return;
+      player.socketId = socket.id;
+      player.hasSubmittedVideos = true;
+
+      let platform: 'tiktok' | 'youtube' | 'unknown' = 'unknown';
+      let videoId = undefined;
+
+      if (url && url.includes('tiktok.com')) {
+        platform = 'tiktok';
+        if (url.includes('vm.tiktok.com') || url.includes('vt.tiktok.com')) {
+           try {
+              const res = await fetch(url, { redirect: 'manual' });
+              const location = res.headers.get('location');
+              if (location) {
+                  url = location;
+              } else if (res.url && res.url !== url) {
+                  url = res.url;
+              }
+           } catch (e) {}
+        }
+        const match = url.match(/video\/(\d+)/);
+        if (match && match[1]) {
+           videoId = match[1];
+        }
+      }
+
+      room.videos.push({
+        id: `${socket.id}-video-${Date.now()}`,
+        url: url || '',
+        platform,
+        videoId,
+        duration: parseInt(duration, 10) || 15,
+        submitterId: player.id,
+        recordings: {}
+      });
+
+      io.to(cleanCode).emit("room-updated", room);
+    });
+
+    socket.on("start-tiktokdubbing-game", (roomCode: string) => {
+      const cleanCode = roomCode.toUpperCase();
+      const room = rooms.get(cleanCode) as any;
+      if (!room || room.gameType !== 'tiktokdubbing' || room.players[0].socketId !== socket.id) return;
+
+      const allSubmitted = room.players.every((p: any) => p.hasSubmittedVideos);
+      if (!allSubmitted) return;
+
+      room.status = 'playing_video';
+      room.currentVideoIndex = 0;
+
+      for (let i = room.videos.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [room.videos[i], room.videos[j]] = [room.videos[j], room.videos[i]];
+      }
+
+      room.currentVotes = {};
+      room.previousScores = {};
+      room.players.forEach((p: any) => room.previousScores[p.id] = p.score);
+      room.videoStartTime = Date.now();
+      io.to(cleanCode).emit("tiktokdubbing-game-started", room);
+    });
+
+    socket.on("start-dubbing-recording-phase", (roomCode: string) => {
+      const cleanCode = roomCode.toUpperCase();
+      const room = rooms.get(cleanCode) as any;
+      if (!room || room.gameType !== 'tiktokdubbing' || room.status !== 'playing_video') return;
+      if (room.players[0].socketId !== socket.id) return;
+
+      room.status = 'recording';
+      room.playersReadyForRecording = [];
+      io.to(cleanCode).emit("dubbing-recording-phase-started", room);
+    });
+
+    socket.on("submit-dubbing-recording", ({ roomCode, username, audioBase64 }: { roomCode: string, username: string, audioBase64: string }) => {
+      const cleanCode = roomCode.toUpperCase();
+      const room = rooms.get(cleanCode) as any;
+      if (!room || room.gameType !== 'tiktokdubbing' || room.status !== 'recording') return;
+
+      const player = room.players.find((p: any) => p.username === username);
+      if (!player) return;
+
+      const currentVideo = room.videos[room.currentVideoIndex];
+      if (currentVideo) {
+          currentVideo.recordings[player.id] = audioBase64;
+      }
+
+      if (!room.playersReadyForRecording) room.playersReadyForRecording = [];
+      if (!room.playersReadyForRecording.includes(player.id)) {
+         room.playersReadyForRecording.push(player.id);
+      }
+
+      io.to(cleanCode).emit("player-dubbing-recorded");
+
+      if (room.playersReadyForRecording.length >= room.players.length) {
+         room.status = 'listening';
+         io.to(cleanCode).emit("dubbing-listening-phase-started", room);
+      }
+    });
+
+    socket.on("play-next-dubbing", ({ roomCode, targetPlayerId }: { roomCode: string, targetPlayerId: string }) => {
+      const cleanCode = roomCode.toUpperCase();
+      const room = rooms.get(cleanCode) as any;
+      if (!room || room.gameType !== 'tiktokdubbing' || room.status !== 'listening') return;
+      if (room.players[0].socketId !== socket.id) return;
+
+      room.currentlyPlayingRecordingId = targetPlayerId;
+      io.to(cleanCode).emit("play-dubbing", { targetPlayerId });
+    });
+
+    socket.on("start-dubbing-voting-phase", (roomCode: string) => {
+      const cleanCode = roomCode.toUpperCase();
+      const room = rooms.get(cleanCode) as any;
+      if (!room || room.gameType !== 'tiktokdubbing' || room.status !== 'listening') return;
+      if (room.players[0].socketId !== socket.id) return;
+
+      room.status = 'voting';
+      io.to(cleanCode).emit("dubbing-voting-phase-started", room);
+    });
+
+    socket.on("submit-tiktokdubbing-vote", ({ roomCode, targetPlayerId, username }: { roomCode: string, targetPlayerId: string, username: string }) => {
+      const cleanCode = roomCode.toUpperCase();
+      const room = rooms.get(cleanCode) as any;
+      if (!room || room.gameType !== 'tiktokdubbing' || room.status !== 'voting') return;
+
+      const voter = room.players.find((p: any) => p.username === username);
+      if (!voter || voter.id === targetPlayerId || room.currentVotes[voter.id]) return;
+
+      room.currentVotes[voter.id] = targetPlayerId;
+      io.to(cleanCode).emit("player-dubbing-voted");
+
+      if (Object.keys(room.currentVotes).length >= room.players.length) {
+         Object.values(room.currentVotes).forEach((votedId: any) => {
+             const votedPlayer = room.players.find((p: any) => p.id === votedId);
+             if (votedPlayer) votedPlayer.score += 300;
+         });
+         room.status = 'results';
+         io.to(cleanCode).emit("tiktokdubbing-results-revealed", {
+            results: room.currentVotes,
+            players: room.players
+         });
+      }
+    });
+
+    socket.on("next-dubbing-video", (roomCode: string) => {
+      const cleanCode = roomCode.toUpperCase();
+      const room = rooms.get(cleanCode) as any;
+      if (!room || room.gameType !== 'tiktokdubbing' || room.players[0].socketId !== socket.id) return;
+
+      if (room.status !== 'results') return;
+
+      if (room.currentVideoIndex < room.videos.length - 1) {
+        room.currentVideoIndex++;
+        room.currentVotes = {};
+        room.previousScores = {};
+        room.players.forEach((p: any) => room.previousScores[p.id] = p.score);
+        room.playersReadyForRecording = [];
+        room.videoStartTime = Date.now();
+        room.status = 'playing_video';
+        io.to(cleanCode).emit("room-updated", room);
+        io.to(cleanCode).emit("next-dubbing-video", { currentVideoIndex: room.currentVideoIndex });
+      } else {
+        room.status = 'ended';
+        io.to(cleanCode).emit("game-ended", room);
+      }
+    });
+
+    socket.on("send-reaction", ({ roomCode, emoji }: { roomCode: string, emoji: string }) => {
+      const cleanCode = roomCode.toUpperCase();
+      const room = rooms.get(cleanCode);
+      if (!room) return;
+      io.to(cleanCode).emit("show-reaction", { emoji });
+    });
+socket.on("disconnect", () => {
       // Update global count
       io.emit("global-stats", { connectedUsers: io.engine.clientsCount });
 

@@ -46,6 +46,16 @@ export default function HubHome() {
       accent: "group-hover:border-purple-500/50"
     },
     {
+      id: "tiktokdubbing",
+      title: "TikTok Dubbing",
+      description: "Le Grand Doublage ! Enregistrez votre voix sur les pires TikToks muets.",
+      href: "/tiktokdubbing",
+      status: "active",
+      tags: ["Micro", "Doublage"],
+      gradient: "from-[#fe2c55]/20 to-[#00f2fe]/20",
+      accent: "group-hover:border-[#fe2c55]/50"
+    },
+    {
       id: "mystery-2",
       title: "Qui a dit ça ?",
       description: "Retrouvez les pires citations de vos amis.",

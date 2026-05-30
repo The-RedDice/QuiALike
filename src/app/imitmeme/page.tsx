@@ -8,6 +8,7 @@ import { Users, Play, ArrowLeft } from "lucide-react";
 import ImitMemeBoard from "@/components/ImitMemeBoard";
 import Login from "@/components/Login";
 import { ChatInput, useChatBubbles, ChatBubble } from "@/components/ChatBubble";
+import { Reactions } from "@/components/Reactions";
 
 export default function ImitMemeHome() {
   const { socket, connected } = useSocket();
@@ -333,6 +334,7 @@ export default function ImitMemeHome() {
           )}
         </div>
         {socket && <ChatInput socket={socket} roomCode={room.code} username={profile.username} />}
+        {socket && <Reactions socket={socket} roomCode={room.code} />}
       </div>
     );
   }
