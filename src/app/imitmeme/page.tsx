@@ -226,6 +226,7 @@ export default function ImitMemeHome() {
             <form
               onSubmit={(e) => {
                 e.preventDefault();
+                if (user?.hasSubmittedVideos) return;
                 const formData = new FormData(e.currentTarget);
                 const url = formData.get("url") as string;
                 const file = formData.get("file") as File;
@@ -241,6 +242,10 @@ export default function ImitMemeHome() {
                         };
                     } else {
                         socket.emit("submit-imitmeme-meme", { roomCode: room.code, url, duration, username: profile.username });
+                    }
+                    if (user) {
+                        user.hasSubmittedVideos = true;
+                        setUser({ ...user });
                     }
                 }
               }}
