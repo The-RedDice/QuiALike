@@ -15,8 +15,8 @@ export default function Login({ onLogin }: LoginProps) {
   // Avatar Customization State
   const [avatarSeed, setAvatarSeed] = useState(Math.random().toString(36).substring(7));
   const [skinColor, setSkinColor] = useState("f8d25c");
-  const [top, setTop] = useState("shortHair");
-  const [accessories, setAccessories] = useState("none");
+  const [hair, setHair] = useState("shortHair");
+  const [accessories, setAccessories] = useState("prescription01");
   const [clothing, setClothing] = useState("blazerAndShirt");
 
   // Voice Customization State
@@ -24,11 +24,11 @@ export default function Login({ onLogin }: LoginProps) {
   const [voiceRate, setVoiceRate] = useState(1.0);
 
   const skinColors = ["ffdbb4", "edb98a", "fd9841", "f8d25c", "d08b5b", "ae5d29", "614335"];
-  const tops = ["noHair", "eyepatch", "hat", "hijab", "turban", "winterHat1", "winterHat2", "winterHat3", "winterHat4", "longHairBigHair", "longHairBob", "longHairBun", "longHairCurly", "longHairCurvy", "longHairDreads", "longHairFrida", "longHairFro", "longHairFroBand", "longHairNotTooLong", "longHairShavedSides", "longHairMiaWallace", "longHairStraight", "longHairStraight2", "longHairStraightStrand", "shortHairDreads01", "shortHairDreads02", "shortHairFrizzle", "shortHairShaggyMullet", "shortHairShortCurly", "shortHairShortFlat", "shortHairShortRound", "shortHairShortWaved", "shortHairSides", "shortHairTheCaesar", "shortHairTheCaesarSidePart"];
+  const hairOptions = ["noHair", "eyepatch", "hat", "hijab", "turban", "winterHat1", "winterHat2", "winterHat3", "winterHat4", "longHair", "longHairBob", "longHairBun", "longHairCurly", "longHairCurvy", "longHairDreads", "longHairFrida", "longHairFro", "longHairFroBand", "longHairNotTooLong", "longHairShavedSides", "longHairMiaWallace", "longHairStraight", "longHairStraight2", "longHairStraightStrand", "shortHair", "shortHairDreads01", "shortHairDreads02", "shortHairFrizzle", "shortHairShaggyMullet", "shortHairShortCurly", "shortHairShortFlat", "shortHairShortRound", "shortHairShortWaved", "shortHairSides", "shortHairTheCaesar", "shortHairTheCaesarSidePart"];
   const accessoryOptions = ["none", "kurt", "prescription01", "prescription02", "round", "sunglasses", "wayfarers"];
   const clothingOptions = ["blazerAndShirt", "blazerAndSweater", "collarAndSweater", "graphicShirt", "hoodie", "overall", "shirtCrewNeck", "shirtScoopNeck", "shirtVNeck"];
 
-  const currentAvatarUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(avatarSeed)}&skinColor=${skinColor}&top=${top}&accessories=${accessories}&clothing=${clothing}`;
+  const currentAvatarUrl = `https://api.dicebear.com/9.x/avataaars/svg?seed=${encodeURIComponent(avatarSeed)}&skinColor=${skinColor}&hair=${hair}&accessories=${accessories}&clothing=${clothing}`;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -111,8 +111,8 @@ export default function Login({ onLogin }: LoginProps) {
                 </div>
                 <div>
                     <label className="block text-xs font-bold mb-1">Cheveux/Chapeau</label>
-                    <select className="game-input text-sm p-1" value={top} onChange={e => setTop(e.target.value)}>
-                        {tops.map(t => <option key={t} value={t}>{t}</option>)}
+                    <select className="game-input text-sm p-1" value={hair} onChange={e => setHair(e.target.value)}>
+                        {hairOptions.map(t => <option key={t} value={t}>{t}</option>)}
                     </select>
                 </div>
                 <div>
