@@ -27,6 +27,8 @@ export default function HubHome() {
   const games = [
     {
       id: "mememaker",
+      status: "active",
+      accent: "hover:border-purple-500/50",
       title: "Meme Maker (feat ISrael)",
       description: "Ajoute le meilleur texte à un GIF. Le plus drôle gagne !",
       href: "/mememaker",
