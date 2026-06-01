@@ -116,60 +116,7 @@ export default function MemeMakerGame() {
     navigator.clipboard.writeText(gameState.code);
   };
 
-  const searchGifs = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!gifSearchQuery.trim()) return;
 
-    setIsSearchingGifs(true);
-    try {
-        // Fetch from Giphy
-        const giphyKey = process.env.NEXT_PUBLIC_GIPHY_API_KEY || "GlVGYHqc3SyCEGqRN13OrE2w1hW25RkO";
-        const giphyRes = await fetch(`https://api.giphy.com/v1/gifs/search?api_key=${giphyKey}&q=${encodeURIComponent(gifSearchQuery)}&limit=6&rating=g`);
-        const giphyData = await giphyRes.json();
-
-        let results: {id: string, url: string, preview: string}[] = [];
-
-        if (giphyData.data) {
-            results = [...results, ...giphyData.data.map((gif: any) => ({
-                id: 'giphy_' + gif.id,
-                url: gif.images.original.url,
-                preview: gif.images.fixed_height_small.url
-            }))];
-        }
-
-        // Fetch from Klipy (we can use their free test endpoint)
-        try {
-            const klipyRes = await fetch(`https://api.klipy.co/v2/search?q=${encodeURIComponent(gifSearchQuery)}&limit=6`, {
-                headers: {
-                    'Accept': 'application/json'
-                }
-            });
-            const klipyData = await klipyRes.json();
-
-            if (klipyData.data) {
-                results = [...results, ...klipyData.data.map((gif: any) => ({
-                    id: 'klipy_' + gif.id,
-                    url: gif.media?.gif?.url || gif.url,
-                    preview: gif.media?.gif?.url || gif.url
-                }))];
-            }
-        } catch (klipyError) {
-            console.error("Error fetching from Klipy", klipyError);
-        }
-
-        // Shuffle results so they are mixed
-        for (let i = results.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [results[i], results[j]] = [results[j], results[i]];
-        }
-
-        setGifResults(results);
-    } catch (err) {
-        console.error("Error fetching GIFs", err);
-    } finally {
-        setIsSearchingGifs(false);
-    }
-  };
 
   const submitGif = () => {
       if (!socket || !gameState || !selectedGif) return;
@@ -229,11 +176,11 @@ export default function MemeMakerGame() {
             <p className="text-zinc-400">Le plus drôle gagne !</p>
           </div>
 
-          <div className="bg-zinc-900 p-8 space-y-6 goofy-border goofy-shadow transform rotate-1">
+          <div className="game-container space-y-6 transform rotate-1">
             <button
               onClick={createRoom}
               disabled={isJoining}
-              className="w-full py-4 bg-white text-black font-bold rounded-xl text-lg hover:bg-zinc-200 transition disabled:opacity-50"
+              className="game-button"
             >
               Créer une partie
             </button>
@@ -251,12 +198,12 @@ export default function MemeMakerGame() {
                 value={roomCodeInput}
                 onChange={(e) => setRoomCodeInput(e.target.value.toUpperCase())}
                 maxLength={6}
-                className="w-full p-4 bg-zinc-950 border border-zinc-800 rounded-xl text-center text-2xl font-bold tracking-[0.5em] text-white placeholder:text-zinc-600 focus:outline-none focus:border-purple-500 transition uppercase"
+                className="game-input text-center text-2xl tracking-widest uppercase"
               />
               <button
                 type="submit"
                 disabled={!roomCodeInput || isJoining}
-                className="w-full py-4 bg-zinc-800 text-white font-bold rounded-xl text-lg hover:bg-zinc-700 transition disabled:opacity-50"
+                className="game-button bg-zinc-800 text-white border-zinc-600"
               >
                 Rejoindre
               </button>
@@ -301,8 +248,8 @@ export default function MemeMakerGame() {
         {gameState.status === 'lobby' && (
           <div className="flex flex-col md:flex-row gap-8">
             <div className="flex-1 space-y-6">
-                <div className="bg-zinc-900 p-6 goofy-border goofy-shadow transform rotate-1">
-                    <h2 className="text-4xl font-bold mb-4 goofy-wiggle text-cyan-400" style={{fontFamily: "var(--font-bangers)"}}>Trouve un GIF hilarant !</h2>
+                <div className="game-container transform rotate-1">
+                    <h2 className="text-4xl font-bold mb-4 goofy-wiggle text-cyan-400" style={{fontFamily: "var(--font-bangers)", filter: "drop-shadow(2px 2px 0px #000)"}}>Trouve un GIF hilarant !</h2>
                     {currentPlayer?.hasSubmittedVideos ? (
                         <div className="flex flex-col items-center justify-center py-12 text-center">
                             <CheckCircle2 className="w-16 h-16 text-green-500 mb-4" />
@@ -311,37 +258,32 @@ export default function MemeMakerGame() {
                         </div>
                     ) : (
                         <div className="space-y-4">
-                            <form onSubmit={searchGifs} className="flex gap-2">
+                            <div className="flex flex-col gap-4">
                                 <input
                                     type="text"
-                                    value={gifSearchQuery}
-                                    onChange={(e)=>setGifSearchQuery(e.target.value)}
-                                    placeholder="Chercher un GIF (ex: cat funny)"
-                                    className="flex-1 bg-zinc-950 border border-zinc-800 p-3 rounded-xl outline-none focus:border-purple-500 transition"
+                                    value={selectedGif || ""}
+                                    onChange={(e) => setSelectedGif(e.target.value)}
+                                    placeholder="Colle le lien du GIF ici (URL se terminant par .gif)"
+                                    className="game-input w-full"
                                 />
-                                <button type="submit" disabled={isSearchingGifs} className="bg-purple-600 text-white p-3 rounded-xl hover:bg-purple-500 transition">
-                                    {isSearchingGifs ? <Loader2 className="animate-spin" /> : <Search />}
-                                </button>
-                            </form>
-
-                            {gifResults.length > 0 && (
-                                <div className="grid grid-cols-3 gap-2 max-h-64 overflow-y-auto pr-2 custom-scrollbar">
-                                    {gifResults.map(gif => (
+                                {selectedGif && (
+                                    <div className="flex justify-center p-4 bg-zinc-950 rounded-xl border border-zinc-800">
                                         <img
-                                            key={gif.id}
-                                            src={gif.preview}
-                                            onClick={() => setSelectedGif(gif.url)}
-                                            className={`w-full h-24 object-cover rounded-lg cursor-pointer hover:opacity-80 transition ${selectedGif === gif.url ? 'ring-4 ring-purple-500' : ''}`}
-                                            alt="gif"
+                                            src={selectedGif}
+                                            className="max-h-48 object-contain rounded-lg"
+                                            alt="Aperçu du GIF"
+                                            onError={(e) => {
+                                                (e.target as HTMLImageElement).src = 'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExMThjODBiZjYyYzUzODQ5NjI3YjYxYzZjNjRmMjRiN2Mw/3o7aTskHEUjd211L5Z/giphy.gif';
+                                            }}
                                         />
-                                    ))}
-                                </div>
-                            )}
+                                    </div>
+                                )}
+                            </div>
 
                             <button
                                 onClick={submitGif}
                                 disabled={!selectedGif}
-                                className="w-full py-3 bg-white text-black font-bold rounded-xl disabled:opacity-50"
+                                className="game-button"
                             >
                                 Valider mon GIF
                             </button>
@@ -353,7 +295,7 @@ export default function MemeMakerGame() {
                     <button
                         onClick={startGame}
                         disabled={activePlayers.some((p: any) => !p.hasSubmittedVideos)}
-                        className="w-full py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold rounded-2xl text-xl disabled:opacity-50"
+                        className="game-button bg-pink-500 text-white"
                     >
                         Démarrer la partie
                     </button>
@@ -361,7 +303,7 @@ export default function MemeMakerGame() {
             </div>
 
             <div className="w-full md:w-80 space-y-4">
-              <div className="bg-zinc-900 p-6 goofy-border goofy-shadow transform -rotate-2">
+              <div className="game-container transform -rotate-2">
                 <div className="flex items-center gap-2 text-zinc-400 mb-6">
                   <Users size={18} />
                   <span className="font-medium">{activePlayers.length} Joueurs</span>
@@ -410,12 +352,12 @@ export default function MemeMakerGame() {
                         <p className="text-zinc-400 mt-2">En attente des autres joueurs ({gameState.playersSubmittedCaption.length}/{activePlayers.length})</p>
                     </div>
                 ) : (
-                    <div className="w-full max-w-md space-y-4 bg-zinc-900 p-6 rounded-3xl border border-zinc-800">
+                    <div className="game-container w-full max-w-md space-y-4 transform -rotate-1">
                         <textarea
                             value={captionText}
                             onChange={(e)=>setCaptionText(e.target.value)}
                             placeholder="Écris un truc drôle..."
-                            className="w-full bg-zinc-950 border border-zinc-800 p-4 rounded-xl outline-none focus:border-purple-500 transition resize-none uppercase font-bold"
+                            className="game-input resize-none uppercase"
                             rows={3}
                         />
 
@@ -423,7 +365,7 @@ export default function MemeMakerGame() {
                             <select
                                 value={captionFont}
                                 onChange={(e)=>setCaptionFont(e.target.value)}
-                                className="flex-1 bg-zinc-950 border border-zinc-800 p-3 rounded-xl outline-none"
+                                className="game-input flex-1 p-2"
                             >
                                 {fonts.map(f => <option key={f} value={f} style={{fontFamily: f}}>{f}</option>)}
                             </select>
@@ -485,7 +427,7 @@ export default function MemeMakerGame() {
                 {isHost && (
                      <button
                         onClick={nextReveal}
-                        className="py-4 px-12 bg-white text-black font-bold rounded-full text-lg hover:bg-zinc-200 transition mt-8 shadow-xl shadow-white/10"
+                        className="game-button w-auto px-12 mt-8"
                     >
                         Suivant
                     </button>
@@ -563,7 +505,7 @@ export default function MemeMakerGame() {
                 {isHost && (
                      <button
                         onClick={nextRound}
-                        className="py-4 px-12 bg-white text-black font-bold rounded-full text-lg hover:bg-zinc-200 transition mt-8 shadow-xl"
+                        className="game-button w-auto px-12 mt-8"
                     >
                         {gameState.currentMemeIndex < gameState.memes.length - 1 ? "Manche Suivante" : "Classement Final"}
                     </button>
@@ -603,7 +545,7 @@ export default function MemeMakerGame() {
 
              <button
                 onClick={quitGame}
-                className="py-4 px-12 bg-zinc-800 text-white font-bold rounded-full text-lg hover:bg-zinc-700 transition mt-8"
+                className="game-button w-auto px-12 mt-8 bg-zinc-800 text-white"
             >
                 Retour au Hub
             </button>
