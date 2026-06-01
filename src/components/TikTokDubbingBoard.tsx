@@ -186,7 +186,7 @@ export default function TikTokDubbingBoard({ room, user, socket }: Props) {
                   })}
               </div>
               {user.isHost && (
-                  <button onClick={nextVideo} className="mt-12 px-8 py-4 bg-[#c0c0c0] text-black font-black text-xl rounded-2xl hover:scale-105 transition-transform">
+                  <button onClick={nextVideo} className="game-button mt-12">
                       {room.currentVideoIndex < room.videos.length - 1 ? 'VIDÉO SUIVANTE' : 'TERMINER'}
                   </button>
               )}
@@ -279,7 +279,7 @@ export default function TikTokDubbingBoard({ room, user, socket }: Props) {
                       <div className="mt-8 pt-6 border-t border-white/10">
                           <button
                               onClick={() => socket.emit("start-dubbing-voting-phase", room.code)}
-                              className="w-full py-4 bg-[#fe2c55] text-black font-black text-lg rounded-xl hover:bg-[#fe2c55]/90 transition-colors shadow-[0_0_20px_rgba(254,44,85,0.3)]"
+                              className="game-button"
                           >
                               PASSER AUX VOTES
                           </button>

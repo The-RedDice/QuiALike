@@ -9,7 +9,7 @@ function seededRandom(str: string) {
     return x - Math.floor(x);
 }
 
-export function playTTS(text: string, username: string) {
+export function playTTS(text: string, username: string, customPitch?: number, customRate?: number) {
     if (typeof window === 'undefined' || !window.speechSynthesis) return;
 
     // Create utterance
@@ -36,10 +36,10 @@ export function playTTS(text: string, username: string) {
 
     // 2. Set pitch (between 0.1 and 2.0) - make it extreme for funny results
     // We map rnd2 (0 to 1) to [0.1, 2.0]
-    utterance.pitch = 0.1 + (rnd2 * 1.9);
+    utterance.pitch = customPitch !== undefined ? customPitch : (0.1 + (rnd2 * 1.9));
 
     // 3. Set rate (between 0.5 and 1.5)
-    utterance.rate = 0.5 + (rnd3 * 1.0);
+    utterance.rate = customRate !== undefined ? customRate : (0.5 + (rnd3 * 1.0));
 
     window.speechSynthesis.speak(utterance);
 }

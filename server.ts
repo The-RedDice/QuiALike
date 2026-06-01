@@ -681,7 +681,9 @@ app.prepare().then(() => {
       io.to(cleanCode).emit("show-chat-bubble", {
           username: player.username,
           text: text.substring(0, 100), // Max 100 chars
-          duration
+          duration,
+          voicePitch: player.voicePitch,
+          voiceRate: player.voiceRate
       });
     });
 

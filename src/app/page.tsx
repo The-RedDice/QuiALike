@@ -29,7 +29,7 @@ export default function HubHome() {
       id: "mememaker",
       status: "active",
       accent: "hover:border-purple-500/50",
-      title: "Meme Maker (feat ISrael)",
+      title: "Meme Maker",
       description: "Ajoute le meilleur texte à un GIF. Le plus drôle gagne !",
       href: "/mememaker",
       color: "bg-purple-500",
