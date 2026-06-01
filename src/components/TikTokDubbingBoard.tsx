@@ -131,7 +131,7 @@ export default function TikTokDubbingBoard({ room, user, socket }: Props) {
   if (room.status === 'voting') {
       const hasVoted = !!room.currentVotes[user.id];
       return (
-          <div className="flex flex-col items-center justify-center min-h-screen p-6 text-white bg-[#09090b]">
+          <div className="flex flex-col items-center justify-center min-h-screen p-6 text-black bg-white">
               <h2 className="text-5xl font-black italic mb-8 uppercase tracking-tighter text-[#00f2fe]">Votez !</h2>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-6 max-w-4xl w-full">
                   {room.players.map(p => {
@@ -142,7 +142,7 @@ export default function TikTokDubbingBoard({ room, user, socket }: Props) {
                               key={p.id}
                               disabled={hasVoted}
                               onClick={() => socket.emit("submit-tiktokdubbing-vote", { roomCode: room.code, targetPlayerId: p.id, username: user.username })}
-                              className={`p-6 rounded-3xl border-2 transition-all flex flex-col items-center gap-4 ${hasVoted ? (isVoted ? 'bg-[#fe2c55] border-[#fe2c55] scale-105' : 'bg-white/5 border-white/10 opacity-50') : 'bg-[#18181b] border-white/10 hover:border-[#fe2c55] hover:scale-105'}`}
+                              className={`p-6 rounded-3xl border-2 transition-all flex flex-col items-center gap-4 ${hasVoted ? (isVoted ? 'bg-[#fe2c55] border-[#fe2c55] scale-105' : 'bg-white/5 border-white/10 opacity-50') : 'bg-white border-white/10 hover:border-[#fe2c55] hover:scale-105'}`}
                           >
                               <img src={p.avatar} className="w-20 h-20 rounded-full" alt={p.username} />
                               <span className="font-bold text-xl">{p.username}</span>
@@ -165,15 +165,15 @@ export default function TikTokDubbingBoard({ room, user, socket }: Props) {
       const sortedPlayers = [...room.players].sort((a, b) => b.score - a.score);
 
       return (
-          <div className="flex flex-col items-center justify-center min-h-screen p-6 text-white bg-[#09090b]">
+          <div className="flex flex-col items-center justify-center min-h-screen p-6 text-black bg-white">
               <h2 className="text-5xl font-black italic mb-12 uppercase tracking-tighter text-[#fe2c55]">Résultats</h2>
               <div className="w-full max-w-2xl space-y-4">
                   {sortedPlayers.map((p, i) => {
                       const gainedVotes = voteCounts[p.id] || 0;
                       return (
-                          <div key={p.id} className="bg-[#18181b] p-6 rounded-3xl flex items-center justify-between border border-white/10">
+                          <div key={p.id} className="bg-white p-6 rounded-3xl flex items-center justify-between border border-white/10">
                               <div className="flex items-center gap-4">
-                                  <div className="text-2xl font-black text-gray-500 w-8">{i + 1}</div>
+                                  <div className="text-2xl font-black text-[#404040] w-8">{i + 1}</div>
                                   <img src={p.avatar} className="w-12 h-12 rounded-full" alt={p.username} />
                                   <span className="font-bold text-xl">{p.username}</span>
                               </div>
@@ -195,9 +195,9 @@ export default function TikTokDubbingBoard({ room, user, socket }: Props) {
   }
 
   return (
-      <div className="flex flex-col items-center min-h-screen p-4 bg-[#09090b] text-white">
+      <div className="flex flex-col items-center min-h-screen p-4 bg-white text-black">
           <div className="w-full max-w-4xl mt-6">
-              <div className="flex justify-between items-center mb-8 bg-[#18181b] p-4 rounded-2xl border border-white/10">
+              <div className="flex justify-between items-center mb-8 bg-white p-4 rounded-2xl border border-white/10">
                   <div className="flex gap-4">
                       {room.players.map(p => (
                           <div key={p.id} className="relative">
@@ -211,7 +211,7 @@ export default function TikTokDubbingBoard({ room, user, socket }: Props) {
                   </div>
               </div>
 
-              <div className="relative w-full aspect-[9/16] max-h-[60vh] max-w-sm mx-auto bg-black rounded-3xl overflow-hidden border-4 border-[#18181b] shadow-2xl">
+              <div className="relative w-full aspect-[9/16] max-h-[60vh] max-w-sm mx-auto bg-[#404040] rounded-3xl overflow-hidden border-4 border-[#18181b] shadow-2xl">
                   {currentVideo?.platform === 'tiktok' && currentVideo.videoId ? (
                       <iframe
                           src={`https://www.tiktok.com/embed/v2/${currentVideo.videoId}?lang=fr-FR&autoplay=1&mute=1`}
@@ -219,7 +219,7 @@ export default function TikTokDubbingBoard({ room, user, socket }: Props) {
                           allow="autoplay"
                       ></iframe>
                   ) : (
-                      <div className="w-full h-full flex flex-col items-center justify-center bg-[#18181b] text-gray-500 p-8 text-center gap-4">
+                      <div className="w-full h-full flex flex-col items-center justify-center bg-white text-[#404040] p-8 text-center gap-4">
                           <Play size={48} className="opacity-50" />
                           <p className="font-bold">Aperçu vidéo indisponible</p>
                           <a href={currentVideo?.url} target="_blank" className="text-xs text-[#00f2fe] underline break-all">{currentVideo?.url}</a>
@@ -228,14 +228,14 @@ export default function TikTokDubbingBoard({ room, user, socket }: Props) {
 
                   {/* Overlays */}
                   {room.status === 'playing_video' && (
-                      <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center backdrop-blur-sm z-10">
+                      <div className="absolute inset-0 bg-[#404040]/80 flex flex-col items-center justify-center backdrop-blur-sm z-10">
                           <h3 className="text-2xl font-black uppercase tracking-widest mb-4">Préparez-vous</h3>
                           <div className="text-8xl font-black text-[#fe2c55] animate-pulse">{timeLeft}</div>
                       </div>
                   )}
 
                   {room.status === 'recording' && (
-                      <div className="absolute top-4 right-4 bg-red-500 text-white px-4 py-2 rounded-full font-black animate-pulse flex items-center gap-2 z-10 shadow-lg">
+                      <div className="absolute top-4 right-4 bg-red-500 text-black px-4 py-2 rounded-full font-black animate-pulse flex items-center gap-2 z-10 shadow-lg">
                           <div className="w-3 h-3 bg-white rounded-full"></div> REC {timeLeft}s
                       </div>
                   )}
@@ -245,7 +245,7 @@ export default function TikTokDubbingBoard({ room, user, socket }: Props) {
                           {room.currentlyPlayingRecordingId ? (() => {
                               const p = room.players.find(pl => pl.id === room.currentlyPlayingRecordingId);
                               return p ? (
-                                  <div className="bg-black/80 backdrop-blur-md p-3 rounded-2xl flex items-center gap-3 border border-white/20 animate-in slide-in-from-top-4">
+                                  <div className="bg-[#404040]/80 backdrop-blur-md p-3 rounded-2xl flex items-center gap-3 border border-white/20 animate-in slide-in-from-top-4">
                                       <img src={p.avatar} className="w-10 h-10 rounded-full animate-pulse ring-2 ring-[#00f2fe]" alt={p.username} />
                                       <div>
                                           <p className="text-xs text-[#00f2fe] font-black uppercase tracking-widest">Écoute en cours</p>
@@ -254,7 +254,7 @@ export default function TikTokDubbingBoard({ room, user, socket }: Props) {
                                   </div>
                               ) : null;
                           })() : (
-                              <div className="bg-black/80 backdrop-blur-md p-4 rounded-2xl text-center border border-white/20 font-bold animate-pulse">
+                              <div className="bg-[#404040]/80 backdrop-blur-md p-4 rounded-2xl text-center border border-white/20 font-bold animate-pulse">
                                   En attente du lecteur...
                               </div>
                           )}
@@ -263,14 +263,14 @@ export default function TikTokDubbingBoard({ room, user, socket }: Props) {
               </div>
 
               {room.status === 'listening' && user.isHost && (
-                  <div className="mt-8 p-6 bg-[#18181b] rounded-3xl border border-white/10 text-center">
-                      <h3 className="font-black text-xl mb-4 uppercase tracking-widest text-gray-400">Contrôle DJ</h3>
+                  <div className="mt-8 p-6 bg-white rounded-3xl border border-white/10 text-center">
+                      <h3 className="font-black text-xl mb-4 uppercase tracking-widest text-[#404040]">Contrôle DJ</h3>
                       <div className="flex flex-wrap gap-3 justify-center">
                           {room.players.map(p => (
                               <button
                                   key={p.id}
                                   onClick={() => socket.emit("play-next-dubbing", { roomCode: room.code, targetPlayerId: p.id })}
-                                  className={`px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2 ${room.currentlyPlayingRecordingId === p.id ? 'bg-[#00f2fe] text-black scale-105 shadow-[0_0_20px_rgba(0,242,254,0.3)]' : 'bg-[#09090b] border border-white/20 hover:border-[#00f2fe]/50'}`}
+                                  className={`px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2 ${room.currentlyPlayingRecordingId === p.id ? 'bg-[#00f2fe] text-black scale-105 shadow-[0_0_20px_rgba(0,242,254,0.3)]' : 'bg-white border border-white/20 hover:border-[#00f2fe]/50'}`}
                               >
                                   <Play size={16} fill={room.currentlyPlayingRecordingId === p.id ? "black" : "none"} /> {p.username}
                               </button>
@@ -279,7 +279,7 @@ export default function TikTokDubbingBoard({ room, user, socket }: Props) {
                       <div className="mt-8 pt-6 border-t border-white/10">
                           <button
                               onClick={() => socket.emit("start-dubbing-voting-phase", room.code)}
-                              className="w-full py-4 bg-[#fe2c55] text-white font-black text-lg rounded-xl hover:bg-[#fe2c55]/90 transition-colors shadow-[0_0_20px_rgba(254,44,85,0.3)]"
+                              className="w-full py-4 bg-[#fe2c55] text-black font-black text-lg rounded-xl hover:bg-[#fe2c55]/90 transition-colors shadow-[0_0_20px_rgba(254,44,85,0.3)]"
                           >
                               PASSER AUX VOTES
                           </button>

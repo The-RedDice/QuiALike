@@ -1,23 +1,28 @@
+
 @import "tailwindcss";
 
 :root {
-  --background: #09090b;
-  --foreground: #fafafa;
+  --background: #008080; /* Classic Windows Teal */
+  --foreground: #000000;
+  --win-grey: #c0c0c0;
+  --win-blue: #000080;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-bangers), var(--font-comic-neue), var(--font-geist-sans);
+  --font-sans: var(--font-vt323), var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
 body {
   background: var(--background);
-  background-image: radial-gradient(circle at 20px 20px, #ff2c5522 2px, transparent 2px), radial-gradient(circle at 40px 40px, #00f2fe22 2px, transparent 2px);
-  background-size: 60px 60px;
+  /* Optional: a subtle grid or dots over the teal for texture */
+  background-image: radial-gradient(#ffffff33 1px, transparent 1px);
+  background-size: 20px 20px;
   color: var(--foreground);
-  font-family: var(--font-geist-sans);
+  font-family: var(--font-sans);
+  font-size: 1.2rem;
 }
 
 /* Wacky Goofy Animations */
@@ -28,7 +33,7 @@ body {
 
 @keyframes bounce-wild {
   0%, 100% { transform: translateY(0) scale(1); }
-  50% { transform: translateY(-15px) scale(1.05); }
+  50% { transform: translateY(-10px) scale(1.03); }
 }
 
 @keyframes color-shift {
@@ -40,10 +45,6 @@ body {
   animation: wiggle 0.5s ease-in-out infinite;
 }
 
-.goofy-wiggle-slow {
-  animation: wiggle 2s ease-in-out infinite;
-}
-
 .goofy-bounce {
   animation: bounce-wild 1s cubic-bezier(0.28, 0.84, 0.42, 1) infinite;
 }
@@ -52,86 +53,117 @@ body {
   animation: color-shift 3s linear infinite;
 }
 
-.goofy-shadow {
-  box-shadow: 8px 8px 0px #fe2c55, -8px -8px 0px #00f2fe;
-}
-
-.goofy-border {
-  border: 4px solid #fff;
-  border-radius: 20px 5px 20px 5px;
-}
-
-/* Unified Goofy Components */
+/* Unified Neo-Retro Window Styles */
 .game-container {
-  background-color: #18181b;
-  border: 4px solid #fff;
-  border-radius: 20px 5px 20px 5px;
-  box-shadow: 6px 6px 0px #fe2c55, -6px -6px 0px #00f2fe;
-  padding: 1.5rem;
+  background-color: var(--win-grey);
+  border-top: 2px solid #fff;
+  border-left: 2px solid #fff;
+  border-right: 2px solid #000;
+  border-bottom: 2px solid #000;
+  box-shadow: 1px 1px 0px #808080 inset, -1px -1px 0px #dfdfdf inset, 8px 8px 0px rgba(0,0,0,0.5);
+  padding: 4px; /* Space for the "title bar" if we add one inside, or just border */
+  position: relative;
   transition: all 0.3s ease;
+  color: black;
+}
+
+/* A simulated window title bar wrapper */
+.window-title-bar {
+  background: linear-gradient(90deg, #000080, #1084d0);
+  color: white;
+  padding: 4px 8px;
+  font-family: var(--font-sans);
+  font-weight: bold;
+  font-size: 1.2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.window-content {
+  padding: 1rem;
+  background-color: var(--win-grey);
 }
 
 .game-title {
   font-family: var(--font-bangers);
   font-weight: 900;
   text-transform: uppercase;
-  background-clip: text;
-  -webkit-background-clip: text;
-  color: transparent;
-  background-image: linear-gradient(to right, #a855f7, #ec4899);
+  color: #fff;
+  text-shadow: 3px 3px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
   animation: bounce-wild 1.5s cubic-bezier(0.28, 0.84, 0.42, 1) infinite;
   text-align: center;
-  filter: drop-shadow(0 4px 4px rgba(0,0,0,0.5));
 }
 
 .game-button {
   width: 100%;
-  padding: 1rem;
-  background-color: #fff;
-  color: #000;
-  font-weight: 900;
-  font-family: var(--font-bangers);
+  padding: 0.5rem 1rem;
+  background-color: var(--win-grey);
+  color: black;
+  font-weight: bold;
+  font-family: var(--font-sans);
   font-size: 1.5rem;
-  border-radius: 0.75rem;
-  border: 4px solid #000;
-  box-shadow: 4px 4px 0px #000;
-  transition: all 0.2s ease;
+  border-top: 3px solid #fff;
+  border-left: 3px solid #fff;
+  border-right: 3px solid #000;
+  border-bottom: 3px solid #000;
+  transition: all 0.1s ease;
+  cursor: pointer;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  box-shadow: inset 1px 1px 0px #dfdfdf, inset -1px -1px 0px #808080;
 }
 
 .game-button:hover:not(:disabled) {
-  transform: translate(-2px, -2px) scale(1.02);
-  box-shadow: 6px 6px 0px #fe2c55;
+  /* No scaling, just retro click feel */
+  background-color: #dfdfdf;
 }
 
 .game-button:active:not(:disabled) {
-  transform: translate(2px, 2px);
-  box-shadow: 0px 0px 0px #fe2c55;
+  border-top: 3px solid #000;
+  border-left: 3px solid #000;
+  border-right: 3px solid #fff;
+  border-bottom: 3px solid #fff;
+  box-shadow: inset 1px 1px 0px #808080, inset -1px -1px 0px #dfdfdf;
+  padding-top: 0.6rem;
+  padding-bottom: 0.4rem;
 }
 
 .game-button:disabled {
-  opacity: 0.5;
+  color: #808080;
+  text-shadow: 1px 1px 0 #fff;
   cursor: not-allowed;
-  transform: none;
-  box-shadow: 2px 2px 0px #000;
 }
 
 .game-input {
   width: 100%;
-  background-color: #09090b;
-  border: 3px solid #3f3f46;
-  padding: 1rem;
-  border-radius: 0.75rem;
+  background-color: #fff;
+  color: #000;
+  border-top: 3px solid #000;
+  border-left: 3px solid #000;
+  border-right: 3px solid #fff;
+  border-bottom: 3px solid #fff;
+  box-shadow: inset 2px 2px 0px #808080, inset -1px -1px 0px #dfdfdf;
+  padding: 0.75rem;
   outline: none;
-  font-weight: bold;
-  font-family: var(--font-comic-neue);
-  font-size: 1.1rem;
-  transition: all 0.2s ease;
-  color: #fff;
+  font-family: var(--font-sans);
+  font-size: 1.5rem;
 }
 
 .game-input:focus {
-  border-color: #a855f7;
-  transform: scale(1.02);
+  background-color: #ffffcc; /* Light yellow focus */
+}
+
+/* Custom Scrollbar for retro feel */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 16px;
+  background: var(--win-grey);
+  border-left: 1px solid #dfdfdf;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--win-grey);
+  border-top: 2px solid #fff;
+  border-left: 2px solid #fff;
+  border-right: 2px solid #000;
+  border-bottom: 2px solid #000;
 }

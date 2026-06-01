@@ -163,9 +163,9 @@ export default function MemeMakerGame() {
 
   if (!gameState) {
     return (
-      <div className="min-h-screen bg-zinc-950 text-white flex flex-col items-center justify-center p-4">
+      <div className="min-h-screen bg-transparent text-black flex flex-col items-center justify-center p-4">
         <div className="absolute top-4 left-4">
-          <button onClick={() => router.push("/")} className="text-zinc-400 hover:text-white transition flex items-center gap-2 bg-zinc-900 px-4 py-2 rounded-full">
+          <button onClick={() => router.push("/")} className="text-[#404040] hover:text-black transition flex items-center gap-2 bg-[#c0c0c0] px-4 py-2 rounded-full">
             <LogOut size={16} /> Retour au Hub
           </button>
         </div>
@@ -173,10 +173,18 @@ export default function MemeMakerGame() {
         <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="w-full max-w-md space-y-8 text-center">
           <div>
             <h1 className="text-7xl font-black mb-4 tracking-tight bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent goofy-bounce" style={{fontFamily: "var(--font-bangers)"}}>Meme Maker</h1>
-            <p className="text-zinc-400">Le plus drôle gagne !</p>
+            <p className="text-[#404040]">Le plus drôle gagne !</p>
           </div>
 
           <div className="game-container space-y-6 transform rotate-1">
+            <div className="window-title-bar">
+                <span>C:\\GAMES\\MEMEMAKER.EXE</span>
+                <div className="flex gap-1">
+                    <div className="w-4 h-4 bg-[#c0c0c0] border border-white border-r-black border-b-black font-bold text-black flex justify-center items-center text-[10px] cursor-pointer">_</div>
+                    <div className="w-4 h-4 bg-[#c0c0c0] border border-white border-r-black border-b-black font-bold text-black flex justify-center items-center text-[10px] cursor-pointer">□</div>
+                    <div className="w-4 h-4 bg-[#c0c0c0] border border-white border-r-black border-b-black font-bold text-black flex justify-center items-center text-[10px] cursor-pointer">x</div>
+                </div>
+            </div>
             <button
               onClick={createRoom}
               disabled={isJoining}
@@ -186,9 +194,9 @@ export default function MemeMakerGame() {
             </button>
 
             <div className="relative flex items-center py-2">
-              <div className="flex-grow border-t border-zinc-800"></div>
-              <span className="flex-shrink-0 mx-4 text-zinc-500 text-sm font-medium">OU</span>
-              <div className="flex-grow border-t border-zinc-800"></div>
+              <div className="flex-grow border-t border-black"></div>
+              <span className="flex-shrink-0 mx-4 text-[#404040] text-sm font-medium">OU</span>
+              <div className="flex-grow border-t border-black"></div>
             </div>
 
             <form onSubmit={joinRoom} className="space-y-3">
@@ -203,7 +211,7 @@ export default function MemeMakerGame() {
               <button
                 type="submit"
                 disabled={!roomCodeInput || isJoining}
-                className="game-button bg-zinc-800 text-white border-zinc-600"
+                className="game-button bg-[#808080] text-black border-zinc-600"
               >
                 Rejoindre
               </button>
@@ -221,21 +229,21 @@ export default function MemeMakerGame() {
   const currentMeme = gameState.memes[gameState.currentMemeIndex];
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white flex flex-col p-4 md:p-8">
+    <div className="min-h-screen bg-transparent text-black flex flex-col p-4 md:p-8">
       {/* HEADER */}
-      <header className="flex justify-between items-center mb-8 bg-zinc-900 p-4 goofy-border goofy-shadow transform -rotate-1">
+      <header className="flex justify-between items-center mb-8 bg-[#c0c0c0] p-4 goofy-border goofy-shadow transform -rotate-1">
         <div className="flex items-center gap-4">
-          <button onClick={quitGame} className="p-2 hover:bg-zinc-800 rounded-full transition text-zinc-400 hover:text-white">
+          <button onClick={quitGame} className="p-2 hover:bg-[#808080] rounded-full transition text-[#404040] hover:text-black">
             <LogOut size={20} />
           </button>
           <h1 className="text-xl font-bold bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent hidden md:block">
             Meme Maker
           </h1>
         </div>
-        <div className="flex items-center gap-4 bg-zinc-950 px-4 py-2 rounded-xl border border-zinc-800">
-          <span className="text-sm text-zinc-400 font-medium">CODE:</span>
+        <div className="flex items-center gap-4 bg-white px-4 py-2 rounded-xl border border-black">
+          <span className="text-sm text-[#404040] font-medium">CODE:</span>
           <span className="text-xl font-black tracking-widest">{gameState.code}</span>
-          <button onClick={copyRoomCode} className="text-zinc-400 hover:text-white transition">
+          <button onClick={copyRoomCode} className="text-[#404040] hover:text-black transition">
             <Copy size={16} />
           </button>
         </div>
@@ -249,12 +257,20 @@ export default function MemeMakerGame() {
           <div className="flex flex-col md:flex-row gap-8">
             <div className="flex-1 space-y-6">
                 <div className="game-container transform rotate-1">
+            <div className="window-title-bar">
+                <span>C:\\GAMES\\MEMEMAKER.EXE</span>
+                <div className="flex gap-1">
+                    <div className="w-4 h-4 bg-[#c0c0c0] border border-white border-r-black border-b-black font-bold text-black flex justify-center items-center text-[10px] cursor-pointer">_</div>
+                    <div className="w-4 h-4 bg-[#c0c0c0] border border-white border-r-black border-b-black font-bold text-black flex justify-center items-center text-[10px] cursor-pointer">□</div>
+                    <div className="w-4 h-4 bg-[#c0c0c0] border border-white border-r-black border-b-black font-bold text-black flex justify-center items-center text-[10px] cursor-pointer">x</div>
+                </div>
+            </div>
                     <h2 className="text-4xl font-bold mb-4 goofy-wiggle text-cyan-400" style={{fontFamily: "var(--font-bangers)", filter: "drop-shadow(2px 2px 0px #000)"}}>Trouve un GIF hilarant !</h2>
                     {currentPlayer?.hasSubmittedVideos ? (
                         <div className="flex flex-col items-center justify-center py-12 text-center">
                             <CheckCircle2 className="w-16 h-16 text-green-500 mb-4" />
                             <p className="text-xl font-bold text-green-400">GIF soumis !</p>
-                            <p className="text-zinc-400 mt-2">Attends les autres joueurs...</p>
+                            <p className="text-[#404040] mt-2">Attends les autres joueurs...</p>
                         </div>
                     ) : (
                         <div className="space-y-4">
@@ -267,7 +283,7 @@ export default function MemeMakerGame() {
                                     className="game-input w-full"
                                 />
                                 {selectedGif && (
-                                    <div className="flex justify-center p-4 bg-zinc-950 rounded-xl border border-zinc-800">
+                                    <div className="flex justify-center p-4 bg-white rounded-xl border border-black">
                                         <img
                                             src={selectedGif}
                                             className="max-h-48 object-contain rounded-lg"
@@ -295,7 +311,7 @@ export default function MemeMakerGame() {
                     <button
                         onClick={startGame}
                         disabled={activePlayers.some((p: any) => !p.hasSubmittedVideos)}
-                        className="game-button bg-pink-500 text-white"
+                        className="game-button bg-pink-500 text-black"
                     >
                         Démarrer la partie
                     </button>
@@ -304,20 +320,28 @@ export default function MemeMakerGame() {
 
             <div className="w-full md:w-80 space-y-4">
               <div className="game-container transform -rotate-2">
-                <div className="flex items-center gap-2 text-zinc-400 mb-6">
+            <div className="window-title-bar">
+                <span>C:\\GAMES\\MEMEMAKER.EXE</span>
+                <div className="flex gap-1">
+                    <div className="w-4 h-4 bg-[#c0c0c0] border border-white border-r-black border-b-black font-bold text-black flex justify-center items-center text-[10px] cursor-pointer">_</div>
+                    <div className="w-4 h-4 bg-[#c0c0c0] border border-white border-r-black border-b-black font-bold text-black flex justify-center items-center text-[10px] cursor-pointer">□</div>
+                    <div className="w-4 h-4 bg-[#c0c0c0] border border-white border-r-black border-b-black font-bold text-black flex justify-center items-center text-[10px] cursor-pointer">x</div>
+                </div>
+            </div>
+                <div className="flex items-center gap-2 text-[#404040] mb-6">
                   <Users size={18} />
                   <span className="font-medium">{activePlayers.length} Joueurs</span>
                 </div>
                 <div className="space-y-4">
                   {gameState.players.map((p: any) => (
                     <div key={p.id} className={`flex items-center gap-3 ${p.offline ? 'opacity-40' : ''}`}>
-                      <img src={p.avatar} alt={p.username} className="w-12 h-12 rounded-full bg-zinc-800 object-cover" />
+                      <img src={p.avatar} alt={p.username} className="w-12 h-12 rounded-full bg-[#808080] object-cover" />
                       <div className="flex-1">
                         <div className="font-bold flex items-center gap-2">
                           {p.username}
                           {p.isHost && <Crown size={14} className="text-yellow-500" />}
                         </div>
-                        <div className="text-xs text-zinc-500">
+                        <div className="text-xs text-[#404040]">
                           {p.offline ? "Déconnecté" : (p.hasSubmittedVideos ? "Prêt" : "Cherche un GIF...")}
                         </div>
                       </div>
@@ -336,7 +360,7 @@ export default function MemeMakerGame() {
                 <h2 className="text-5xl font-black text-center goofy-wiggle text-pink-500" style={{fontFamily: "var(--font-bangers)"}}>Ajoute ton texte !</h2>
 
                 <div className="relative">
-                    <img src={currentMeme?.gifUrl} className="w-96 rounded-xl border-4 border-zinc-800 shadow-2xl" alt="Meme to caption" />
+                    <img src={currentMeme?.gifUrl} className="w-96 rounded-xl border-4 border-black shadow-2xl" alt="Meme to caption" />
                     <div
                         className="absolute bottom-4 left-0 w-full text-center px-4 break-words"
                         style={{ fontFamily: captionFont, color: captionColor, textShadow: '2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000' }}
@@ -349,10 +373,18 @@ export default function MemeMakerGame() {
                      <div className="text-center">
                         <CheckCircle2 className="w-16 h-16 text-green-500 mx-auto mb-4" />
                         <p className="text-xl font-bold text-green-400">Texte validé !</p>
-                        <p className="text-zinc-400 mt-2">En attente des autres joueurs ({gameState.playersSubmittedCaption.length}/{activePlayers.length})</p>
+                        <p className="text-[#404040] mt-2">En attente des autres joueurs ({gameState.playersSubmittedCaption.length}/{activePlayers.length})</p>
                     </div>
                 ) : (
                     <div className="game-container w-full max-w-md space-y-4 transform -rotate-1">
+            <div className="window-title-bar">
+                <span>C:\\GAMES\\MEMEMAKER.EXE</span>
+                <div className="flex gap-1">
+                    <div className="w-4 h-4 bg-[#c0c0c0] border border-white border-r-black border-b-black font-bold text-black flex justify-center items-center text-[10px] cursor-pointer">_</div>
+                    <div className="w-4 h-4 bg-[#c0c0c0] border border-white border-r-black border-b-black font-bold text-black flex justify-center items-center text-[10px] cursor-pointer">□</div>
+                    <div className="w-4 h-4 bg-[#c0c0c0] border border-white border-r-black border-b-black font-bold text-black flex justify-center items-center text-[10px] cursor-pointer">x</div>
+                </div>
+            </div>
                         <textarea
                             value={captionText}
                             onChange={(e)=>setCaptionText(e.target.value)}
@@ -370,7 +402,7 @@ export default function MemeMakerGame() {
                                 {fonts.map(f => <option key={f} value={f} style={{fontFamily: f}}>{f}</option>)}
                             </select>
 
-                            <div className="flex gap-2 bg-zinc-950 border border-zinc-800 p-2 rounded-xl">
+                            <div className="flex gap-2 bg-white border border-black p-2 rounded-xl">
                                 {colors.map(c => (
                                     <button
                                         key={c}
@@ -452,7 +484,7 @@ export default function MemeMakerGame() {
                                 onClick={() => !isMe && !hasVoted && voteForCaption(authorId)}
                                 disabled={isMe || hasVoted}
                                 className={`relative group text-left rounded-2xl border-4 overflow-hidden transition-all duration-300
-                                    ${myVote ? 'border-purple-500 scale-[1.02]' : 'border-zinc-800 hover:border-zinc-600'}
+                                    ${myVote ? 'border-purple-500 scale-[1.02]' : 'border-black hover:border-zinc-600'}
                                     ${isMe ? 'opacity-50 cursor-not-allowed grayscale' : ''}
                                 `}
                             >
@@ -463,7 +495,7 @@ export default function MemeMakerGame() {
                                 >
                                     <span className="text-2xl uppercase font-black">{caption.text}</span>
                                 </div>
-                                {isMe && <div className="absolute top-4 left-4 bg-black/80 px-3 py-1 rounded-lg text-sm font-bold border border-white/20">C'est le tien</div>}
+                                {isMe && <div className="absolute top-4 left-4 bg-[#404040]/80 px-3 py-1 rounded-lg text-sm font-bold border border-white/20">C'est le tien</div>}
                             </button>
                          )
                     })}
@@ -490,7 +522,7 @@ export default function MemeMakerGame() {
                                 initial={{ opacity: 0, x: -20 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 transition={{ delay: idx * 0.1 }}
-                                className="flex items-center gap-4 bg-zinc-900 p-4 rounded-2xl border border-zinc-800"
+                                className="flex items-center gap-4 bg-[#c0c0c0] p-4 rounded-2xl border border-black"
                             >
                                 <img src={p.avatar} alt={p.username} className="w-16 h-16 rounded-full object-cover border-2 border-purple-500" />
                                 <div className="flex-1">
@@ -530,13 +562,13 @@ export default function MemeMakerGame() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.2 }}
                     className={`flex items-center gap-4 p-4 rounded-2xl border ${
-                      index === 0 ? "bg-yellow-500/10 border-yellow-500/50" : "bg-zinc-900 border-zinc-800"
+                      index === 0 ? "bg-yellow-500/10 border-yellow-500/50" : "bg-[#c0c0c0] border-black"
                     }`}
                   >
-                    <div className={`text-2xl font-black w-8 text-center ${index === 0 ? "text-yellow-500" : "text-zinc-500"}`}>
+                    <div className={`text-2xl font-black w-8 text-center ${index === 0 ? "text-yellow-500" : "text-[#404040]"}`}>
                       #{index + 1}
                     </div>
-                    <img src={p.avatar} alt={p.username} className="w-12 h-12 rounded-full bg-zinc-800 object-cover" />
+                    <img src={p.avatar} alt={p.username} className="w-12 h-12 rounded-full bg-[#808080] object-cover" />
                     <div className="flex-1 font-bold text-lg">{p.username}</div>
                     <div className="text-xl font-black">{p.score}</div>
                   </motion.div>
@@ -545,7 +577,7 @@ export default function MemeMakerGame() {
 
              <button
                 onClick={quitGame}
-                className="game-button w-auto px-12 mt-8 bg-zinc-800 text-white"
+                className="game-button w-auto px-12 mt-8 bg-[#808080] text-black"
             >
                 Retour au Hub
             </button>
