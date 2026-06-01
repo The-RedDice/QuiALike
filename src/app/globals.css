@@ -2,8 +2,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #008080; /* Classic Windows Teal */
-  --foreground: #000000;
+  --background: #09090b; /* Classic Windows Teal */
+  --foreground: #ffffff;
   --win-grey: #c0c0c0;
   --win-blue: #000080;
 }
@@ -18,7 +18,7 @@
 body {
   background: var(--background);
   /* Optional: a subtle grid or dots over the teal for texture */
-  background-image: radial-gradient(#ffffff33 1px, transparent 1px);
+  background-image: radial-gradient(#ffffff1a 1px, transparent 1px);
   background-size: 20px 20px;
   color: var(--foreground);
   font-family: var(--font-sans);
@@ -90,7 +90,7 @@ body {
   font-family: var(--font-bangers);
   font-weight: 900;
   text-transform: uppercase;
-  color: #fff;
+  color: #000;
   text-shadow: 3px 3px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
   animation: bounce-wild 1.5s cubic-bezier(0.28, 0.84, 0.42, 1) infinite;
   text-align: center;
@@ -138,7 +138,7 @@ body {
 .game-input {
   width: 100%;
   background-color: #fff;
-  color: #000;
+  color: #fff;
   border-top: 3px solid #000;
   border-left: 3px solid #000;
   border-right: 3px solid #fff;

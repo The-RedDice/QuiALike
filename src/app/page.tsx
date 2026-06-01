@@ -88,7 +88,7 @@ export default function HubHome() {
         {/* Header */}
         <div className="text-center space-y-4 animate-in fade-in slide-in-from-bottom-6 duration-700">
           <div className="flex justify-center items-center gap-4 mb-4">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs font-black tracking-widest text-[#404040] uppercase">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs font-black tracking-widest text-white uppercase">
                 <Sparkles size={14} className="text-yellow-400" />
                 <span>Party Games Hub</span>
               </div>
@@ -102,11 +102,11 @@ export default function HubHome() {
                   </div>
               )}
           </div>
-          <h1 className="text-5xl md:text-7xl font-black italic tracking-tighter uppercase leading-none">
+          <h1 className="text-5xl md:text-7xl font-black italic tracking-tighter uppercase leading-none text-white drop-shadow-[2px_2px_0_rgba(255,255,255,0.3)]">
             La Soirée<br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-gray-200 to-gray-500">Commence Ici</span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">Commence Ici</span>
           </h1>
-          <p className="text-[#404040] font-medium max-w-md mx-auto mt-6 text-lg">
+          <p className="text-gray-300 font-medium max-w-md mx-auto mt-6 text-lg">
             Des jeux multijoueurs simples et rapides pour animer vos soirées entre potes.
           </p>
         </div>
@@ -124,11 +124,11 @@ export default function HubHome() {
                 className={`
                   group relative flex flex-col p-6 rounded-[2.5rem] border transition-all duration-500
                   animate-in fade-in slide-in-from-bottom-8
-                  ${isActive ? 'bg-white border-white/10 hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)] cursor-pointer ' + game.accent : 'game-container opacity-50 grayscale cursor-default'}
+                  ${isActive ? 'game-container bg-[#c0c0c0] cursor-pointer hover:bg-white ' : 'game-container opacity-50 grayscale cursor-default'}
                 `}
                 style={{ animationDelay: `${index * 150}ms` }}
               >
-                {/* Card Gradient Background */}
+                <div className="window-title-bar mb-4"><span>{game.title.toUpperCase()}.EXE</span><div className="flex gap-1"><div className="w-3 h-3 bg-[#c0c0c0] border border-white border-r-black border-b-black font-bold text-black flex justify-center items-center text-[8px]">_</div><div className="w-3 h-3 bg-[#c0c0c0] border border-white border-r-black border-b-black font-bold text-black flex justify-center items-center text-[8px]">x</div></div></div>{/* Card Gradient Background */}
                 <div className={`absolute inset-0 bg-gradient-to-br ${game.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-700 rounded-[2.5rem] pointer-events-none`}></div>
 
                 <div className="relative z-10 flex-1 flex flex-col">
@@ -149,7 +149,7 @@ export default function HubHome() {
                   </div>
 
                   {/* Card Body */}
-                  <h3 className="text-2xl font-black mb-3 group-hover:text-black transition-colors text-gray-100">{game.title}</h3>
+                  <h3 className="text-3xl font-black tracking-wide font-sans mb-2 text-black" style={{fontFamily: "var(--font-bangers)", filter: "drop-shadow(1px 1px 0px white)"}}>{game.title}</h3>
                   <p className="text-[#404040] text-sm font-medium leading-relaxed mb-6 flex-1">
                     {game.description}
                   </p>

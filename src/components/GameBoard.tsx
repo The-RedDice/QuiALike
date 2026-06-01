@@ -132,10 +132,10 @@ export default function GameBoard({ room, user, socket }: GameBoardProps) {
   if (room.status === 'leaderboard') {
     const sortedPlayers = [...room.players].sort((a, b) => b.score - a.score);
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-white text-black animate-in fade-in duration-700 relative w-full">
+      <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-[#c0c0c0] text-black animate-in fade-in duration-700 relative w-full">
         <button
           onClick={handleLeave}
-          className="absolute top-6 left-6 p-3 rounded-full bg-white/5 hover:bg-[#fe2c55]/20 text-[#404040] hover:text-[#fe2c55] transition-colors border border-white/10 group z-50 flex items-center gap-2"
+          className="absolute top-6 left-6 p-3 rounded-full bg-[#c0c0c0]/5 hover:bg-[#fe2c55]/20 text-[#404040] hover:text-[#fe2c55] transition-colors border border-white/10 group z-50 flex items-center gap-2"
         >
           <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
           <span className="font-bold text-sm hidden sm:inline">Quitter</span>
@@ -162,13 +162,13 @@ export default function GameBoard({ room, user, socket }: GameBoardProps) {
                   }}
                   className={`
                     absolute w-full flex items-center gap-4 p-5 rounded-[2rem] transition-colors
-                    ${index === 0 ? 'bg-[#404040] text-black border-2 border-yellow-400/50 shadow-[0_0_30px_rgba(250,204,21,0.2)]' : 'bg-white/5 border border-white/10'}
+                    ${index === 0 ? 'bg-black text-black border-2 border-yellow-400/50 shadow-[0_0_30px_rgba(250,204,21,0.2)]' : 'bg-[#c0c0c0]/5 border border-white/10'}
                   `}
                   style={{ top: index * 90 }} // 90px spacing between items
                 >
                   <div className={`
                       w-10 h-10 rounded-full flex items-center justify-center font-black text-lg
-                      ${index === 0 ? 'bg-yellow-400 text-black' : 'bg-white/10 text-[#404040]'}
+                      ${index === 0 ? 'bg-yellow-400 text-black' : 'bg-[#c0c0c0]/10 text-[#404040]'}
                   `}>
                       {index + 1}
                   </div>
@@ -201,7 +201,7 @@ export default function GameBoard({ room, user, socket }: GameBoardProps) {
             <button
               onClick={nextVideo}
               disabled={isAdvancing}
-              className={`w-full max-w-md mx-auto py-6 rounded-3xl font-black text-lg transition-all flex items-center justify-center gap-2 ${isAdvancing ? 'bg-gray-400 text-gray-700 cursor-not-allowed' : 'bg-white text-[#09090b] hover:scale-[1.02]'}`}
+              className={`w-full max-w-md mx-auto py-6 rounded-3xl font-black text-lg transition-all flex items-center justify-center gap-2 ${isAdvancing ? 'bg-gray-400 text-gray-700 cursor-not-allowed' : 'bg-[#c0c0c0] text-[#09090b] hover:scale-[1.02]'}`}
             >
               {room.currentVideoIndex < room.videos.length - 1 ? 'CONTINUER' : 'PODIUM FINAL'}
               <ArrowRight size={20} />
@@ -219,10 +219,10 @@ export default function GameBoard({ room, user, socket }: GameBoardProps) {
   if (room.status === 'ended') {
     const sortedPlayers = [...room.players].sort((a, b) => b.score - a.score);
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-white text-black animate-in fade-in duration-700 relative">
+      <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-[#c0c0c0] text-black animate-in fade-in duration-700 relative">
         <button
           onClick={handleLeave}
-          className="absolute top-6 left-6 p-3 rounded-full bg-white/5 hover:bg-[#fe2c55]/20 text-[#404040] hover:text-[#fe2c55] transition-colors border border-white/10 group z-50 flex items-center gap-2"
+          className="absolute top-6 left-6 p-3 rounded-full bg-[#c0c0c0]/5 hover:bg-[#fe2c55]/20 text-[#404040] hover:text-[#fe2c55] transition-colors border border-white/10 group z-50 flex items-center gap-2"
         >
           <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
           <span className="font-bold text-sm hidden sm:inline">Quitter</span>
@@ -239,12 +239,12 @@ export default function GameBoard({ room, user, socket }: GameBoardProps) {
                 key={p.id}
                 className={`
                   flex items-center gap-4 p-5 rounded-[2rem] transition-all
-                  ${index === 0 ? 'bg-[#404040] text-black scale-105 shadow-2xl' : 'bg-white/5 border border-white/10'}
+                  ${index === 0 ? 'bg-black text-black scale-105 shadow-2xl' : 'bg-[#c0c0c0]/5 border border-white/10'}
                 `}
               >
                 <div className={`
                     w-10 h-10 rounded-full flex items-center justify-center font-black text-lg
-                    ${index === 0 ? 'bg-yellow-400 text-black' : 'bg-white/10 text-[#404040]'}
+                    ${index === 0 ? 'bg-yellow-400 text-black' : 'bg-[#c0c0c0]/10 text-[#404040]'}
                 `}>
                     {index + 1}
                 </div>
@@ -261,7 +261,7 @@ export default function GameBoard({ room, user, socket }: GameBoardProps) {
 
           <button
             onClick={() => window.location.reload()}
-            className="w-full py-6 bg-white text-[#09090b] rounded-3xl font-black text-lg hover:scale-[1.02] transition-all"
+            className="w-full py-6 bg-[#c0c0c0] text-[#09090b] rounded-3xl font-black text-lg hover:scale-[1.02] transition-all"
           >
             REJOUER
           </button>
@@ -271,16 +271,16 @@ export default function GameBoard({ room, user, socket }: GameBoardProps) {
   }
 
   return (
-    <div className="flex flex-col lg:flex-row items-center justify-center min-h-screen p-4 gap-12 bg-white text-black overflow-hidden relative">
+    <div className="flex flex-col lg:flex-row items-center justify-center min-h-screen p-4 gap-12 bg-[#c0c0c0] text-black overflow-hidden relative">
       <button
         onClick={handleLeave}
-        className="absolute top-6 left-6 p-3 rounded-full bg-white/5 hover:bg-[#fe2c55]/20 text-[#404040] hover:text-[#fe2c55] transition-colors border border-white/10 group z-50 flex items-center gap-2"
+        className="absolute top-6 left-6 p-3 rounded-full bg-[#c0c0c0]/5 hover:bg-[#fe2c55]/20 text-[#404040] hover:text-[#fe2c55] transition-colors border border-white/10 group z-50 flex items-center gap-2"
       >
         <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
         <span className="font-bold text-sm hidden sm:inline">Quitter</span>
       </button>
       {/* Video Section */}
-      <div className="relative w-full max-w-[320px] aspect-[9/16] bg-[#404040] rounded-[2.5rem] overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.2)] border-[10px] border-gray-900 group">
+      <div className="relative w-full max-w-[320px] aspect-[9/16] bg-black rounded-[2.5rem] overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.2)] border-[10px] border-gray-900 group">
         {currentVideo.platform === 'tiktok' && currentVideo.videoId ? (
             <iframe
               key={currentVideo.videoId}
@@ -316,19 +316,19 @@ export default function GameBoard({ room, user, socket }: GameBoardProps) {
         {/* Transparent overlay allowing clicks to pass through so the user can interact (e.g. click to play video iframe) */}
         <div className="absolute inset-0 z-10 pointer-events-none"></div>
 
-        <div className="absolute bottom-0 left-0 h-1.5 bg-white/20 w-full z-20">
+        <div className="absolute bottom-0 left-0 h-1.5 bg-[#c0c0c0]/20 w-full z-20">
             <div
-                className="h-full bg-white transition-all duration-1000 ease-linear"
+                className="h-full bg-[#c0c0c0] transition-all duration-1000 ease-linear"
                 style={{ width: revealed ? '0%' : !room.videoStartTime ? '100%' : `${(timeLeft / 30) * 100}%` }}
             ></div>
         </div>
 
         <div className="absolute top-8 left-0 right-0 px-6 flex justify-between items-center pointer-events-none">
-          <div className="bg-[#404040]/40 backdrop-blur-xl px-4 py-2 rounded-2xl flex items-center gap-2 text-black font-black border border-white/10 text-sm">
+          <div className="bg-black/40 backdrop-blur-xl px-4 py-2 rounded-2xl flex items-center gap-2 text-black font-black border border-white/10 text-sm">
             <Timer size={16} className={timeLeft <= 5 ? 'text-red-400 animate-pulse' : 'text-black'} />
             <span className={timeLeft <= 5 ? 'text-red-400' : 'text-black'}>{revealed ? 'FIN' : !room.videoStartTime ? '...' : `${timeLeft}s`}</span>
           </div>
-          <div className="bg-[#404040]/40 backdrop-blur-xl px-4 py-2 rounded-2xl text-black font-black border border-white/10 text-sm">
+          <div className="bg-black/40 backdrop-blur-xl px-4 py-2 rounded-2xl text-black font-black border border-white/10 text-sm">
             {room.currentVideoIndex + 1} / {room.videos.length}
           </div>
         </div>
@@ -358,13 +358,13 @@ export default function GameBoard({ room, user, socket }: GameBoardProps) {
                 disabled={hasVoted || revealed || !room.videoStartTime || p.id === user.id}
                 className={`
                   group relative flex items-center gap-4 p-4 rounded-[1.5rem] border-2 transition-all text-left
-                  ${!hasVoted && !revealed && room.videoStartTime && p.id !== user.id ? 'border-white/5 bg-white/5 hover:border-white/30 hover:bg-white/10 hover:scale-[1.02]' : ''}
+                  ${!hasVoted && !revealed && room.videoStartTime && p.id !== user.id ? 'border-white/5 bg-[#c0c0c0]/5 hover:border-white/30 hover:bg-[#c0c0c0]/10 hover:scale-[1.02]' : ''}
                   ${revealed && isCorrect ? 'border-green-500 bg-green-50 scale-[1.02]' : ''}
                   ${hasVoted && !revealed && isMyChoice ? 'border-blue-500 bg-blue-50' : ''}
-                  ${hasVoted && !revealed && !isMyChoice ? 'border-white/5 bg-white/5 opacity-60' : ''}
+                  ${hasVoted && !revealed && !isMyChoice ? 'border-white/5 bg-[#c0c0c0]/5 opacity-60' : ''}
                   ${revealed && !isCorrect && isMyChoice ? 'border-red-500 bg-red-50' : ''}
-                  ${revealed && !isCorrect && !isMyChoice ? 'border-white/5 bg-white/5 opacity-30 grayscale' : ''}
-                  ${!room.videoStartTime || p.id === user.id ? 'opacity-50 cursor-not-allowed border-white/5 bg-white/5' : ''}
+                  ${revealed && !isCorrect && !isMyChoice ? 'border-white/5 bg-[#c0c0c0]/5 opacity-30 grayscale' : ''}
+                  ${!room.videoStartTime || p.id === user.id ? 'opacity-50 cursor-not-allowed border-white/5 bg-[#c0c0c0]/5' : ''}
                 `}
               >
                 <div className="relative">
@@ -397,13 +397,13 @@ export default function GameBoard({ room, user, socket }: GameBoardProps) {
           </>
         ) : (
           !revealed && (
-            <div className="flex flex-col items-center justify-center h-full text-center p-8 bg-white/5 rounded-[2.5rem] border border-white/10 relative overflow-hidden">
+            <div className="flex flex-col items-center justify-center h-full text-center p-8 bg-[#c0c0c0]/5 rounded-[2.5rem] border border-white/10 relative overflow-hidden">
                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#00f2fe] to-transparent animate-pulse" />
                <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#fe2c55] to-transparent animate-pulse" />
                <Loader2 size={48} className="animate-spin text-black mb-6" />
                <h2 className="text-3xl font-black italic tracking-tighter uppercase mb-2">C&apos;est ta vidéo !</h2>
                <p className="text-[#404040] font-medium">Laisse les autres deviner qui a liké ça...</p>
-               <div className="mt-8 px-4 py-2 bg-[#404040]/40 rounded-full text-sm font-bold border border-white/10">
+               <div className="mt-8 px-4 py-2 bg-black/40 rounded-full text-sm font-bold border border-white/10">
                   {votedCount} / {room.players.length - 1} ont voté
                </div>
             </div>
@@ -411,7 +411,7 @@ export default function GameBoard({ room, user, socket }: GameBoardProps) {
         )}
 
         {revealed && (
-          <div className="p-8 rounded-[2.5rem] bg-white text-black shadow-2xl border border-white/10 animate-in fade-in zoom-in duration-500">
+          <div className="p-8 rounded-[2.5rem] bg-[#c0c0c0] text-black shadow-2xl border border-white/10 animate-in fade-in zoom-in duration-500">
             {!isMyVideo ? (
               <div className="flex items-center gap-5 mb-8">
                 <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg ${revealData?.results[user.id]?.isCorrect ? 'bg-green-500' : 'bg-[#fe2c55]'}`}>
@@ -437,7 +437,7 @@ export default function GameBoard({ room, user, socket }: GameBoardProps) {
             {user.isHost && (
               <button
                 onClick={() => socket.emit('show-leaderboard', room.code)}
-                className="w-full py-5 bg-white text-[#09090b] rounded-2xl font-black text-lg hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                className="w-full py-5 bg-[#c0c0c0] text-[#09090b] rounded-2xl font-black text-lg hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
               >
                 VOIR LE CLASSEMENT
                 <ArrowRight size={20} />

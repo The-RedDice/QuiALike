@@ -37,7 +37,7 @@ export default function Login({ onLogin }: LoginProps) {
     <div className="w-full relative z-10 animate-in fade-in zoom-in duration-500">
       <div className="flex justify-center mb-8 relative">
         <div className="absolute inset-0 bg-gradient-to-r from-[#00f2fe]/20 to-[#fe2c55]/20 blur-xl rounded-full w-20 h-20 mx-auto -z-10 animate-pulse"></div>
-        <div className="w-16 h-16 bg-white rounded-full shadow-lg border border-white/10 flex items-center justify-center">
+        <div className="w-16 h-16 bg-[#c0c0c0] rounded-full shadow-lg border border-white/10 flex items-center justify-center">
             <span className="text-3xl hover:rotate-12 hover:scale-110 transition-transform cursor-default">👋</span>
         </div>
       </div>
@@ -68,7 +68,7 @@ export default function Login({ onLogin }: LoginProps) {
           type="submit"
           disabled={isLoading || !username.trim()}
           className={`game-button flex items-center justify-center gap-3 ${
-            isLoading || !username.trim() ? "opacity-50" : "bg-white text-black"}`}
+            isLoading || !username.trim() ? "opacity-50" : "bg-[#c0c0c0] text-black"}`}
         >
           {(!isLoading && username.trim()) && <div className="absolute inset-0 bg-gradient-to-r from-[#00f2fe]/20 to-[#fe2c55]/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>}
 
