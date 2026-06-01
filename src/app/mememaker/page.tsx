@@ -11,6 +11,7 @@ import { io, Socket } from "socket.io-client";
 import { motion, AnimatePresence } from "framer-motion";
 import { Copy, Users, Play, LogOut, CheckCircle2, Crown, Search, Loader2 } from "lucide-react";
 import Login from "@/components/Login";
+import { playTTS } from "@/lib/tts";
 
 export default function MemeMakerGame() {
   const router = useRouter();
@@ -77,20 +78,15 @@ export default function MemeMakerGame() {
        if (currentMeme) {
           const caption = currentMeme.captions[gameState.currentlyRevealedCaptionAuthorId];
           if (caption && caption.text) {
-             speakText(caption.text);
+             const author = gameState.players.find((p: any) => p.id === gameState.currentlyRevealedCaptionAuthorId);
+             if (author) {
+                 window.speechSynthesis.cancel();
+                 playTTS(caption.text, author.username);
+             }
           }
        }
     }
   }, [gameState?.status, gameState?.currentlyRevealedCaptionAuthorId]);
-
-  const speakText = (text: string) => {
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel(); // Cancel any ongoing speech
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = 'fr-FR'; // French voice
-      window.speechSynthesis.speak(utterance);
-    }
-  };
 
   const createRoom = () => {
     if (!socket || !profile) return;
@@ -227,11 +223,11 @@ export default function MemeMakerGame() {
 
         <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="w-full max-w-md space-y-8 text-center">
           <div>
-            <h1 className="text-5xl font-black mb-4 tracking-tight bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent">Meme Maker</h1>
+            <h1 className="text-7xl font-black mb-4 tracking-tight bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent goofy-bounce" style={{fontFamily: "var(--font-bangers)"}}>Meme Maker</h1>
             <p className="text-zinc-400">Le plus drôle gagne !</p>
           </div>
 
-          <div className="bg-zinc-900 p-8 rounded-3xl border border-zinc-800 space-y-6">
+          <div className="bg-zinc-900 p-8 space-y-6 goofy-border goofy-shadow transform rotate-1">
             <button
               onClick={createRoom}
               disabled={isJoining}
@@ -278,7 +274,7 @@ export default function MemeMakerGame() {
   return (
     <div className="min-h-screen bg-zinc-950 text-white flex flex-col p-4 md:p-8">
       {/* HEADER */}
-      <header className="flex justify-between items-center mb-8 bg-zinc-900 p-4 rounded-2xl border border-zinc-800">
+      <header className="flex justify-between items-center mb-8 bg-zinc-900 p-4 goofy-border goofy-shadow transform -rotate-1">
         <div className="flex items-center gap-4">
           <button onClick={quitGame} className="p-2 hover:bg-zinc-800 rounded-full transition text-zinc-400 hover:text-white">
             <LogOut size={20} />
@@ -303,8 +299,8 @@ export default function MemeMakerGame() {
         {gameState.status === 'lobby' && (
           <div className="flex flex-col md:flex-row gap-8">
             <div className="flex-1 space-y-6">
-                <div className="bg-zinc-900 p-6 rounded-3xl border border-zinc-800">
-                    <h2 className="text-2xl font-bold mb-4">Trouve un GIF hilarant !</h2>
+                <div className="bg-zinc-900 p-6 goofy-border goofy-shadow transform rotate-1">
+                    <h2 className="text-4xl font-bold mb-4 goofy-wiggle text-cyan-400" style={{fontFamily: "var(--font-bangers)"}}>Trouve un GIF hilarant !</h2>
                     {currentPlayer?.hasSubmittedVideos ? (
                         <div className="flex flex-col items-center justify-center py-12 text-center">
                             <CheckCircle2 className="w-16 h-16 text-green-500 mb-4" />
@@ -363,7 +359,7 @@ export default function MemeMakerGame() {
             </div>
 
             <div className="w-full md:w-80 space-y-4">
-              <div className="bg-zinc-900 p-6 rounded-3xl border border-zinc-800">
+              <div className="bg-zinc-900 p-6 goofy-border goofy-shadow transform -rotate-2">
                 <div className="flex items-center gap-2 text-zinc-400 mb-6">
                   <Users size={18} />
                   <span className="font-medium">{activePlayers.length} Joueurs</span>
@@ -393,7 +389,7 @@ export default function MemeMakerGame() {
         {/* CAPTIONING PHASE */}
         {gameState.status === 'captioning' && (
             <div className="flex flex-col items-center justify-center space-y-8 animate-in fade-in slide-in-from-bottom-4">
-                <h2 className="text-3xl font-black">Ajoute ton texte !</h2>
+                <h2 className="text-5xl font-black text-center goofy-wiggle text-pink-500" style={{fontFamily: "var(--font-bangers)"}}>Ajoute ton texte !</h2>
 
                 <div className="relative">
                     <img src={currentMeme?.gifUrl} className="w-96 rounded-xl border-4 border-zinc-800 shadow-2xl" alt="Meme to caption" />
@@ -457,7 +453,7 @@ export default function MemeMakerGame() {
         {/* REVEALING PHASE */}
         {gameState.status === 'revealing' && (
              <div className="flex flex-col items-center justify-center space-y-8 h-full">
-                <h2 className="text-3xl font-black text-purple-400 animate-pulse">Révélation !</h2>
+                <h2 className="text-6xl font-black text-purple-400 goofy-bounce goofy-rainbow" style={{fontFamily: "var(--font-bangers)"}}>Révélation !</h2>
 
                 {gameState.currentlyRevealedCaptionAuthorId && (
                     <motion.div
@@ -534,7 +530,7 @@ export default function MemeMakerGame() {
         {/* ROUND RESULTS PHASE */}
         {gameState.status === 'round_results' && (
             <div className="flex flex-col items-center space-y-8">
-                <h2 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500">Résultats de la manche</h2>
+                <h2 className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500 goofy-bounce" style={{fontFamily: "var(--font-bangers)"}}>Résultats de la manche</h2>
 
                 <div className="flex flex-col gap-4 w-full max-w-md">
                     {gameState.players
@@ -577,7 +573,7 @@ export default function MemeMakerGame() {
         {gameState.status === 'leaderboard' && (
             <div className="flex flex-col items-center justify-center space-y-8 py-12">
             <Crown size={64} className="text-yellow-500 mb-4 animate-bounce" />
-            <h2 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-yellow-600 text-center">
+            <h2 className="text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-yellow-600 text-center goofy-bounce" style={{fontFamily: "var(--font-bangers)"}}>
               Classement Final
             </h2>
             <div className="w-full max-w-md space-y-4">
