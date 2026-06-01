@@ -45,7 +45,7 @@ app.prepare().then(() => {
     // Broadcast total connected users count globally
     io.emit("global-stats", { connectedUsers: io.engine.clientsCount });
 
-    socket.on("create-room", ({ gameType = "quialike", ...userData }: { username: string, avatar: string, gameType?: "quialike" | "imitmeme" | "tiktokdubbing" }) => {
+    socket.on("create-room", ({ gameType = "quialike", ...userData }: { username: string, avatar: string, gameType?: "quialike" | "imitmeme" | "tiktokdubbing" | "mememaker" }) => {
       console.log(`Create ${gameType} room requested by:`, userData.username);
       const roomCode = nanoid(6).toUpperCase();
       const host: Player = {
@@ -72,6 +72,18 @@ app.prepare().then(() => {
           },
           currentVotes: {}
         };
+      } else if (gameType === 'mememaker') {
+        room = {
+          code: roomCode,
+          gameType: 'mememaker',
+          players: [host],
+          status: 'lobby',
+          currentMemeIndex: 0,
+          memes: [],
+          settings: { gifsPerPlayer: 1 },
+          currentVotes: {},
+          playersSubmittedCaption: []
+        } as any;
       } else if (gameType === 'imitmeme') {
         room = {
           code: roomCode,
@@ -856,7 +868,159 @@ app.prepare().then(() => {
       if (!room) return;
       io.to(cleanCode).emit("show-reaction", { emoji });
     });
-socket.on("disconnect", () => {
+
+    // === GAME LOGIC FOR MEMEMAKER ===
+    socket.on("mememaker-submit-gif", (roomCode: string, gifUrl: string) => {
+      const room = rooms.get(roomCode);
+      if (!room || room.gameType !== 'mememaker') return;
+
+      const player = room.players.find(p => p.socketId === socket.id);
+      if (!player) return;
+
+      const memeMakerRoom = room as any;
+
+      memeMakerRoom.memes.push({
+        id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+        gifUrl: gifUrl,
+        submitterId: player.id,
+        captions: {}
+      });
+
+      player.hasSubmittedVideos = true;
+      io.to(roomCode).emit("room-update", room);
+    });
+
+    socket.on("mememaker-start-game", (roomCode: string) => {
+      const room = rooms.get(roomCode);
+      if (!room || room.gameType !== 'mememaker') return;
+
+      const player = room.players.find(p => p.socketId === socket.id);
+      if (!player || !player.isHost) return;
+
+      const memeMakerRoom = room as any;
+      memeMakerRoom.status = 'captioning';
+      memeMakerRoom.currentMemeIndex = 0;
+      memeMakerRoom.playersSubmittedCaption = [];
+
+      for (let i = memeMakerRoom.memes.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [memeMakerRoom.memes[i], memeMakerRoom.memes[j]] = [memeMakerRoom.memes[j], memeMakerRoom.memes[i]];
+      }
+
+      io.to(roomCode).emit("room-update", room);
+    });
+
+    socket.on("mememaker-submit-caption", (roomCode: string, captionData: { text: string; font: string; color: string }) => {
+      const room = rooms.get(roomCode);
+      if (!room || room.gameType !== 'mememaker') return;
+
+      const player = room.players.find(p => p.socketId === socket.id);
+      if (!player) return;
+
+      const memeMakerRoom = room as any;
+      if (memeMakerRoom.status !== 'captioning') return;
+
+      const currentMeme = memeMakerRoom.memes[memeMakerRoom.currentMemeIndex];
+      if (!currentMeme) return;
+
+      currentMeme.captions[player.id] = captionData;
+
+      if (!memeMakerRoom.playersSubmittedCaption.includes(player.id)) {
+        memeMakerRoom.playersSubmittedCaption.push(player.id);
+      }
+
+      io.to(roomCode).emit("room-update", room);
+
+      if (memeMakerRoom.playersSubmittedCaption.length >= room.players.filter(p => !p.offline).length) {
+        memeMakerRoom.status = 'revealing';
+
+        const captionKeys = Object.keys(currentMeme.captions);
+        for (let i = captionKeys.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [captionKeys[i], captionKeys[j]] = [captionKeys[j], captionKeys[i]];
+        }
+
+        memeMakerRoom.revealOrder = captionKeys;
+        memeMakerRoom.currentRevealIndex = 0;
+        memeMakerRoom.currentlyRevealedCaptionAuthorId = captionKeys[0];
+        memeMakerRoom.currentVotes = {};
+
+        io.to(roomCode).emit("room-update", room);
+      }
+    });
+
+    socket.on("mememaker-next-reveal", (roomCode: string) => {
+        const room = rooms.get(roomCode);
+        if (!room || room.gameType !== 'mememaker') return;
+
+        const player = room.players.find(p => p.socketId === socket.id);
+        if (!player || !player.isHost) return;
+
+        const memeMakerRoom = room as any;
+        if (memeMakerRoom.status !== 'revealing') return;
+
+        memeMakerRoom.currentRevealIndex++;
+
+        if (memeMakerRoom.currentRevealIndex < memeMakerRoom.revealOrder.length) {
+            memeMakerRoom.currentlyRevealedCaptionAuthorId = memeMakerRoom.revealOrder[memeMakerRoom.currentRevealIndex];
+            io.to(roomCode).emit("room-update", room);
+        } else {
+            memeMakerRoom.status = 'voting';
+            memeMakerRoom.currentlyRevealedCaptionAuthorId = null;
+            io.to(roomCode).emit("room-update", room);
+        }
+    });
+
+    socket.on("mememaker-vote", (roomCode: string, votedPlayerId: string) => {
+        const room = rooms.get(roomCode);
+        if (!room || room.gameType !== 'mememaker') return;
+
+        const player = room.players.find(p => p.socketId === socket.id);
+        if (!player) return;
+
+        const memeMakerRoom = room as any;
+        if (memeMakerRoom.status !== 'voting') return;
+
+        memeMakerRoom.currentVotes[player.id] = votedPlayerId;
+        io.to(roomCode).emit("room-update", room);
+
+        const activePlayers = room.players.filter(p => !p.offline);
+        if (Object.keys(memeMakerRoom.currentVotes).length >= activePlayers.length) {
+            memeMakerRoom.status = 'round_results';
+
+            Object.values(memeMakerRoom.currentVotes).forEach(votedId => {
+                const votedPlayer = room.players.find(p => p.id === votedId);
+                if (votedPlayer) {
+                    votedPlayer.score += 100;
+                }
+            });
+
+            io.to(roomCode).emit("room-update", room);
+        }
+    });
+
+    socket.on("mememaker-next-round", (roomCode: string) => {
+        const room = rooms.get(roomCode);
+        if (!room || room.gameType !== 'mememaker') return;
+
+        const player = room.players.find(p => p.socketId === socket.id);
+        if (!player || !player.isHost) return;
+
+        const memeMakerRoom = room as any;
+
+        if (memeMakerRoom.currentMemeIndex < memeMakerRoom.memes.length - 1) {
+            memeMakerRoom.currentMemeIndex++;
+            memeMakerRoom.status = 'captioning';
+            memeMakerRoom.playersSubmittedCaption = [];
+            memeMakerRoom.currentVotes = {};
+            io.to(roomCode).emit("room-update", room);
+        } else {
+            memeMakerRoom.status = 'leaderboard';
+            io.to(roomCode).emit("room-update", room);
+        }
+    });
+
+    socket.on("disconnect", () => {
       // Update global count
       io.emit("global-stats", { connectedUsers: io.engine.clientsCount });
 

@@ -9,7 +9,7 @@ export interface Player {
   offline?: boolean;
 }
 
-export type GameType = 'quialike' | 'imitmeme' | 'tiktokdubbing';
+export type GameType = 'quialike' | 'imitmeme' | 'tiktokdubbing' | 'mememaker';
 
 export interface BaseRoom {
   code: string;
@@ -85,7 +85,29 @@ export interface TikTokDubbingRoom extends BaseRoom {
   currentlyPlayingRecordingId?: string; // which player's dubbing is currently being played during 'listening'
 }
 
-export type Room = QuialikeRoom | ImitMemeRoom | TikTokDubbingRoom;
+
+export interface MemeMakerMeme {
+  id: string;
+  gifUrl: string; // URL of the selected GIF
+  submitterId: string;
+  captions: Record<string, { text: string; font: string; color: string }>; // playerId -> their caption
+}
+
+export interface MemeMakerRoom extends BaseRoom {
+  gameType: 'mememaker';
+  status: 'lobby' | 'captioning' | 'revealing' | 'voting' | 'round_results' | 'leaderboard' | 'ended';
+  currentMemeIndex: number;
+  memes: MemeMakerMeme[]; // The list of gifs submitted
+  settings: {
+    gifsPerPlayer: number;
+  };
+  currentVotes: Record<string, string>; // voterId -> authorId (voted best caption)
+  playersSubmittedCaption?: string[]; // IDs of players who have submitted a caption for current meme
+  previousScores?: Record<string, number>;
+  currentlyRevealedCaptionAuthorId?: string; // which player's caption is currently shown during 'revealing'
+}
+
+export type Room = QuialikeRoom | ImitMemeRoom | TikTokDubbingRoom | MemeMakerRoom;
 
 
 export interface Video {
