@@ -17,7 +17,7 @@ export default function Home() {
   const [user, setUser] = useState<Player | null>(null);
   const [error, setError] = useState("");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [profile, setProfile] = useState({ username: "", avatar: "" });
+  const [profile, setProfile] = useState<{ username: string; avatar: string; voicePitch?: number; voiceRate?: number; }>({ username: "", avatar: "" });
 
   useEffect(() => {
     const match = document.cookie.match(new RegExp('(^| )quialike_profile=([^;]+)'));
@@ -274,8 +274,8 @@ export default function Home() {
 
         {!isLoggedIn ? (
           <div className="bg-[#18181b] p-8 rounded-3xl border border-white/10">
-            <Login onLogin={(username, avatar) => {
-              setProfile({ username, avatar });
+            <Login onLogin={(username, avatar, voicePitch, voiceRate) => {
+              setProfile({ username, avatar, voicePitch, voiceRate });
               setIsLoggedIn(true);
             }} />
           </div>

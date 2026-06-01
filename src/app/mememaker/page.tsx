@@ -17,7 +17,7 @@ export default function MemeMakerGame() {
   const router = useRouter();
   const [socket, setSocket] = useState<Socket | null>(null);
   const [gameState, setGameState] = useState<any>(null); // We use any here to match the dynamic server types
-  const [profile, setProfile] = useState<{ username: string; avatar: string } | null>(null);
+  const [profile, setProfile] = useState<{ username: string; avatar: string; voicePitch?: number; voiceRate?: number; } | null>(null);
 
   const [roomCodeInput, setRoomCodeInput] = useState("");
   const [isJoining, setIsJoining] = useState(false);
@@ -57,10 +57,34 @@ export default function MemeMakerGame() {
     const newSocket = io();
     setSocket(newSocket);
 
-    newSocket.on("room-created", (room) => { setGameState(room); });
-    newSocket.on("room-updated", (room) => { setGameState(room); });
+    const handleConnect = () => {
+        const savedRoom = sessionStorage.getItem("current_room");
+        if (savedRoom) {
+            newSocket.emit("join-room", savedRoom, profile);
+        } else if (gameState) {
+            newSocket.emit("join-room", gameState.code, profile);
+        }
+    };
+
+    if (newSocket.connected) {
+        handleConnect();
+    }
+
+    newSocket.on("connect", handleConnect);
+
+    newSocket.on("room-created", (room) => {
+        setGameState(room);
+        sessionStorage.setItem("current_room", room.code);
+    });
+
+    newSocket.on("room-updated", (room) => {
+        setGameState(room);
+        sessionStorage.setItem("current_room", room.code);
+    });
+
     newSocket.on("room-update", (room) => {
-      setGameState(room);
+        setGameState(room);
+        sessionStorage.setItem("current_room", room.code);
     });
 
     newSocket.on("error", (msg) => {
@@ -83,7 +107,7 @@ export default function MemeMakerGame() {
              const author = gameState.players.find((p: any) => p.id === gameState.currentlyRevealedCaptionAuthorId);
              if (author) {
                  window.speechSynthesis.cancel();
-                 playTTS(caption.text, author.username);
+                 playTTS(caption.text, author.username, author.voicePitch, author.voiceRate);
              }
           }
        }
@@ -96,16 +120,21 @@ export default function MemeMakerGame() {
     socket.emit("create-room", { ...profile, gameType: "mememaker" });
   };
 
-  const joinRoom = (e: React.FormEvent) => {
-    e.preventDefault();
+  const joinRoom = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     if (!socket || !profile || !roomCodeInput) return;
     setIsJoining(true);
-    socket.emit("join-room", roomCodeInput.toUpperCase());
+    socket.emit("join-room", roomCodeInput.toUpperCase(), profile);
   };
 
   const leaveRoom = () => {
     if (!socket) return;
-    socket.emit("leave-room");
+    if (gameState) {
+        socket.emit("leave-room", gameState.code);
+    } else {
+        socket.emit("leave-room");
+    }
+    sessionStorage.removeItem("current_room");
     setGameState(null);
     setIsJoining(false);
     setRoomCodeInput("");
@@ -158,7 +187,7 @@ export default function MemeMakerGame() {
   };
 
   if (!profile) {
-    return <Login onLogin={(username, avatar) => setProfile({ username, avatar })} />;
+    return <Login onLogin={(username, avatar, voicePitch, voiceRate) => setProfile({ username, avatar, voicePitch, voiceRate })} />;
   }
 
   if (!gameState) {

@@ -429,7 +429,7 @@ export default function ImitMemeBoard({ room, user, socket }: ImitMemeBoardProps
 
                   {room.status === 'listening' && user.isHost && (
                       <div className="flex justify-center mt-8">
-                         <button onClick={() => socket.emit("start-voting-phase", room.code)} className="px-8 py-4 bg-[#c0c0c0] text-black font-black text-xl rounded-full hover:scale-105 transition-transform">
+                         <button onClick={() => socket.emit("start-voting-phase", room.code)} className="game-button w-auto px-12">
                              PASSER AU VOTE
                          </button>
                       </div>
@@ -470,7 +470,7 @@ export default function ImitMemeBoard({ room, user, socket }: ImitMemeBoardProps
                   </div>
 
                   {user.isHost && (
-                      <button disabled={isAdvancing} onClick={nextMeme} className={`w-full py-5 text-black font-black text-xl rounded-full mt-8 transition-transform ${isAdvancing ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#c0c0c0] hover:scale-[1.02]'}`}>
+                      <button disabled={isAdvancing} onClick={nextMeme} className={`game-button mt-8 ${isAdvancing ? 'opacity-50 cursor-not-allowed' : ''}`}>
                           MÈME SUIVANT
                       </button>
                   )}
@@ -499,7 +499,7 @@ export default function ImitMemeBoard({ room, user, socket }: ImitMemeBoardProps
                       ))}
                   </div>
 
-                  <button onClick={() => window.location.href = '/'} className="block mx-auto mt-10 px-8 py-4 border-2 border-white/20 rounded-full font-black hover:bg-[#c0c0c0]/10 transition-colors">
+                  <button onClick={() => window.location.href = '/'} className="game-button mt-10 w-auto px-12">
                       RETOUR AU HUB
                   </button>
               </div>

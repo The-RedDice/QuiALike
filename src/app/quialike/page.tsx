@@ -4,7 +4,7 @@
 import { useState, useEffect } from "react";
 import { useSocket } from "@/lib/socket";
 import { Room, Player } from "@/types";
-import { Users, Play, ArrowLeft } from "lucide-react";
+import { Users, ArrowLeft } from "lucide-react";
 import GameBoard from "@/components/GameBoard";
 import Login from "@/components/Login";
 import { ChatInput, useChatBubbles, ChatBubble } from "@/components/ChatBubble";
@@ -17,7 +17,7 @@ export default function Home() {
   const [user, setUser] = useState<Player | null>(null);
   const [error, setError] = useState("");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [profile, setProfile] = useState({ username: "", avatar: "" });
+  const [profile, setProfile] = useState<{ username: string; avatar: string; voicePitch?: number; voiceRate?: number; }>({ username: "", avatar: "" });
 
   useEffect(() => {
     // Check for profile cookie on mount
@@ -164,7 +164,7 @@ export default function Home() {
           <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
           <span className="font-bold text-sm hidden sm:inline">Quitter la salle</span>
         </button>
-        <div className="w-full max-w-md bg-[#09090b] p-8 rounded-[2.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/10/50 animate-in fade-in zoom-in-95 duration-500">
+        <div className="w-full max-w-md game-container p-8 animate-in fade-in zoom-in-95 duration-500">
           <div className="flex justify-between items-center mb-10 relative">
             <h1 className="text-2xl font-bold tracking-tight text-gray-500 flex flex-col leading-none">
               <span className="text-[10px] uppercase tracking-widest mb-1 text-[#00f2fe] font-black">Salle</span>
@@ -246,27 +246,24 @@ export default function Home() {
                   <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-[#00f2fe] transition-colors">
                     <span className="font-bold text-sm">1</span>
                   </div>
-                  <input name="url1" type="url" required placeholder="Lien de la vidéo..." className="w-full pl-10 pr-4 py-4 rounded-2xl bg-[#09090b] border border-gray-200 focus:ring-4 focus:ring-[#00f2fe]/10 focus:border-[#00f2fe] outline-none text-sm transition-all shadow-sm" />
+                  <input name="url1" type="url" required placeholder="Lien de la vidéo..." className="game-input pl-10" />
                 </div>
                 <div className="relative group">
                   <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-[#00f2fe] transition-colors">
                     <span className="font-bold text-sm">2</span>
                   </div>
-                  <input name="url2" type="url" placeholder="Lien de la vidéo (Optionnel)" className="w-full pl-10 pr-4 py-4 rounded-2xl bg-[#09090b] border border-gray-200 focus:ring-4 focus:ring-[#00f2fe]/10 focus:border-[#00f2fe] outline-none text-sm transition-all shadow-sm" />
+                  <input name="url2" type="url" placeholder="Lien de la vidéo (Optionnel)" className="game-input pl-10" />
                 </div>
                 <div className="relative group">
                   <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-[#00f2fe] transition-colors">
                     <span className="font-bold text-sm">3</span>
                   </div>
-                  <input name="url3" type="url" placeholder="Lien de la vidéo (Optionnel)" className="w-full pl-10 pr-4 py-4 rounded-2xl bg-[#09090b] border border-gray-200 focus:ring-4 focus:ring-[#00f2fe]/10 focus:border-[#00f2fe] outline-none text-sm transition-all shadow-sm" />
+                  <input name="url3" type="url" placeholder="Lien de la vidéo (Optionnel)" className="game-input pl-10" />
                 </div>
               </div>
 
-              <button type="submit" className="relative w-full overflow-hidden mt-6 group bg-white rounded-2xl">
-                <div className="absolute inset-0 bg-gradient-to-r from-[#00f2fe] to-[#fe2c55] opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                <div className="relative w-full py-4 text-[#09090b] font-black text-lg tracking-wide hover:scale-[0.98] transition-transform flex justify-center items-center gap-2 z-10">
-                  VALIDER MES VIDÉOS
-                </div>
+              <button type="submit" className="game-button mt-6">
+                VALIDER MES VIDÉOS
               </button>
             </form>
           ) : (
@@ -288,17 +285,10 @@ export default function Home() {
             <button
               onClick={startGame}
               disabled={!allSubmitted}
-              className={`relative w-full overflow-hidden group py-5 rounded-3xl font-black text-xl tracking-wide transition-all flex items-center justify-center gap-3 ${
-                allSubmitted
-                  ? "bg-white text-[#09090b] hover:scale-[1.02] active:scale-[0.98] shadow-2xl shadow-black/20"
-                  : "bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200"
-              }`}
+              className={`game-button`}
             >
               {allSubmitted && <div className="absolute inset-0 bg-gradient-to-r from-[#00f2fe]/20 to-[#fe2c55]/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>}
-              <div className="relative z-10 flex items-center gap-3">
-                <Play size={24} fill="currentColor" className={allSubmitted ? "animate-pulse" : ""} />
                 LANCER LA PARTIE
-              </div>
             </button>
           ) : (
             <div className="text-center p-6 bg-[#09090b] border border-white/10 text-gray-400 font-black tracking-widest uppercase text-sm rounded-3xl flex items-center justify-center gap-3 shadow-inner">
@@ -343,8 +333,8 @@ export default function Home() {
 
         {!isLoggedIn ? (
           <div className="bg-[#09090b]/60 backdrop-blur-xl p-8 rounded-[3rem] border border-white/10 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
-            <Login onLogin={(username, avatar) => {
-              setProfile({ username, avatar });
+            <Login onLogin={(username, avatar, voicePitch, voiceRate) => {
+              setProfile({ username, avatar, voicePitch, voiceRate });
               setIsLoggedIn(true);
             }} />
           </div>
@@ -365,7 +355,7 @@ export default function Home() {
             <div className="space-y-4">
                 <button
                 onClick={createRoom}
-                className="relative w-full overflow-hidden group py-5 rounded-[2rem] font-black text-xl tracking-wide transition-all shadow-xl shadow-black/10 hover:shadow-2xl hover:shadow-[#00f2fe]/20 bg-white text-[#09090b] hover:scale-[1.02] active:scale-[0.98]"
+                className="game-button"
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-[#00f2fe]/20 to-[#fe2c55]/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                   <div className="relative z-10 flex items-center justify-center gap-2">
@@ -386,13 +376,13 @@ export default function Home() {
                   <input
                       type="text"
                       placeholder="CODE"
-                      className="w-full p-4 rounded-[1.5rem] bg-[#18181b] border-2 border-white/10 text-white focus:bg-[#18181b] focus:border-[#00f2fe]/30 focus:bg-[#09090b] outline-none transition-all text-center font-black text-2xl tracking-[0.5em] uppercase placeholder:tracking-normal placeholder:text-sm placeholder:font-bold placeholder:text-gray-400"
+                      className="game-input text-center text-2xl"
                       value={roomCode}
                       onChange={(e) => setRoomCode(e.target.value)}
                   />
                   <button
                       onClick={joinRoom}
-                      className="w-full py-4 bg-white text-[#09090b] border-2 border-white/10 rounded-[1.5rem] font-black text-lg hover:scale-[0.98] active:scale-[0.98] transition-all"
+                      className="game-button"
                   >
                       REJOINDRE
                   </button>

@@ -8,14 +8,14 @@ export function useChatBubbles(socket: Socket) {
 
     useEffect(() => {
         if (!socket) return;
-        const handleBubble = ({ username, text, duration }: { username: string, text: string, duration: number }) => {
+        const handleBubble = ({ username, text, duration, voicePitch, voiceRate }: { username: string, text: string, duration: number, voicePitch?: number, voiceRate?: number }) => {
             const id = Date.now();
             setBubbles(prev => ({ ...prev, [username]: { text, id } }));
 
             // Read aloud if not muted
             const isMuted = localStorage.getItem('quialike_tts_muted') === 'true';
             if (!isMuted) {
-                playTTS(text, username);
+                playTTS(text, username, voicePitch, voiceRate);
             }
             setTimeout(() => {
                 setBubbles(prev => {

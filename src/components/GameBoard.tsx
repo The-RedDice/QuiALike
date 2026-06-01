@@ -201,7 +201,7 @@ export default function GameBoard({ room, user, socket }: GameBoardProps) {
             <button
               onClick={nextVideo}
               disabled={isAdvancing}
-              className={`w-full max-w-md mx-auto py-6 rounded-3xl font-black text-lg transition-all flex items-center justify-center gap-2 ${isAdvancing ? 'bg-gray-400 text-gray-700 cursor-not-allowed' : 'bg-[#c0c0c0] text-[#09090b] hover:scale-[1.02]'}`}
+              className={`game-button w-full max-w-md mx-auto flex items-center justify-center gap-2 ${isAdvancing ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               {room.currentVideoIndex < room.videos.length - 1 ? 'CONTINUER' : 'PODIUM FINAL'}
               <ArrowRight size={20} />
@@ -261,7 +261,7 @@ export default function GameBoard({ room, user, socket }: GameBoardProps) {
 
           <button
             onClick={() => window.location.reload()}
-            className="w-full py-6 bg-[#c0c0c0] text-[#09090b] rounded-3xl font-black text-lg hover:scale-[1.02] transition-all"
+            className="game-button"
           >
             REJOUER
           </button>
@@ -437,7 +437,7 @@ export default function GameBoard({ room, user, socket }: GameBoardProps) {
             {user.isHost && (
               <button
                 onClick={() => socket.emit('show-leaderboard', room.code)}
-                className="w-full py-5 bg-[#c0c0c0] text-[#09090b] rounded-2xl font-black text-lg hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                className="game-button mt-4"
               >
                 VOIR LE CLASSEMENT
                 <ArrowRight size={20} />

@@ -17,7 +17,7 @@ export default function ImitMemeHome() {
   const [user, setUser] = useState<Player | null>(null);
   const [error, setError] = useState("");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [profile, setProfile] = useState({ username: "", avatar: "" });
+  const [profile, setProfile] = useState<{ username: string; avatar: string; voicePitch?: number; voiceRate?: number; }>({ username: "", avatar: "" });
 
   useEffect(() => {
     // Check for profile cookie on mount
@@ -369,8 +369,8 @@ export default function ImitMemeHome() {
 
         {!isLoggedIn ? (
           <div className="bg-[#09090b]/60 backdrop-blur-xl p-8 rounded-[3rem] border border-white/10 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
-            <Login onLogin={(username, avatar) => {
-              setProfile({ username, avatar });
+            <Login onLogin={(username, avatar, voicePitch, voiceRate) => {
+              setProfile({ username, avatar, voicePitch, voiceRate });
               setIsLoggedIn(true);
             }} />
           </div>
