@@ -177,8 +177,8 @@ export default function MemeMakerGame() {
           </div>
 
           <div className="game-container space-y-6 transform rotate-1">
-            <div className="window-title-bar">
-                <span>C:\\GAMES\\MEMEMAKER.EXE</span>
+            <div className="window-title-bar text-white">
+                <span className="text-white">C:\\GAMES\\MEMEMAKER.EXE</span>
                 <div className="flex gap-1">
                     <div className="w-4 h-4 bg-[#c0c0c0] border border-white border-r-black border-b-black font-bold text-black flex justify-center items-center text-[10px] cursor-pointer">_</div>
                     <div className="w-4 h-4 bg-[#c0c0c0] border border-white border-r-black border-b-black font-bold text-black flex justify-center items-center text-[10px] cursor-pointer">□</div>
@@ -240,7 +240,7 @@ export default function MemeMakerGame() {
             Meme Maker
           </h1>
         </div>
-        <div className="flex items-center gap-4 bg-white px-4 py-2 rounded-xl border border-black">
+        <div className="flex items-center gap-4 bg-[#c0c0c0] px-4 py-2 rounded-xl border border-black">
           <span className="text-sm text-[#404040] font-medium">CODE:</span>
           <span className="text-xl font-black tracking-widest">{gameState.code}</span>
           <button onClick={copyRoomCode} className="text-[#404040] hover:text-black transition">
@@ -257,8 +257,8 @@ export default function MemeMakerGame() {
           <div className="flex flex-col md:flex-row gap-8">
             <div className="flex-1 space-y-6">
                 <div className="game-container transform rotate-1">
-            <div className="window-title-bar">
-                <span>C:\\GAMES\\MEMEMAKER.EXE</span>
+            <div className="window-title-bar text-white">
+                <span className="text-white">C:\\GAMES\\MEMEMAKER.EXE</span>
                 <div className="flex gap-1">
                     <div className="w-4 h-4 bg-[#c0c0c0] border border-white border-r-black border-b-black font-bold text-black flex justify-center items-center text-[10px] cursor-pointer">_</div>
                     <div className="w-4 h-4 bg-[#c0c0c0] border border-white border-r-black border-b-black font-bold text-black flex justify-center items-center text-[10px] cursor-pointer">□</div>
@@ -283,7 +283,7 @@ export default function MemeMakerGame() {
                                     className="game-input w-full"
                                 />
                                 {selectedGif && (
-                                    <div className="flex justify-center p-4 bg-white rounded-xl border border-black">
+                                    <div className="flex justify-center p-4 bg-[#c0c0c0] rounded-xl border border-black">
                                         <img
                                             src={selectedGif}
                                             className="max-h-48 object-contain rounded-lg"
@@ -320,8 +320,8 @@ export default function MemeMakerGame() {
 
             <div className="w-full md:w-80 space-y-4">
               <div className="game-container transform -rotate-2">
-            <div className="window-title-bar">
-                <span>C:\\GAMES\\MEMEMAKER.EXE</span>
+            <div className="window-title-bar text-white">
+                <span className="text-white">C:\\GAMES\\MEMEMAKER.EXE</span>
                 <div className="flex gap-1">
                     <div className="w-4 h-4 bg-[#c0c0c0] border border-white border-r-black border-b-black font-bold text-black flex justify-center items-center text-[10px] cursor-pointer">_</div>
                     <div className="w-4 h-4 bg-[#c0c0c0] border border-white border-r-black border-b-black font-bold text-black flex justify-center items-center text-[10px] cursor-pointer">□</div>
@@ -377,8 +377,8 @@ export default function MemeMakerGame() {
                     </div>
                 ) : (
                     <div className="game-container w-full max-w-md space-y-4 transform -rotate-1">
-            <div className="window-title-bar">
-                <span>C:\\GAMES\\MEMEMAKER.EXE</span>
+            <div className="window-title-bar text-white">
+                <span className="text-white">C:\\GAMES\\MEMEMAKER.EXE</span>
                 <div className="flex gap-1">
                     <div className="w-4 h-4 bg-[#c0c0c0] border border-white border-r-black border-b-black font-bold text-black flex justify-center items-center text-[10px] cursor-pointer">_</div>
                     <div className="w-4 h-4 bg-[#c0c0c0] border border-white border-r-black border-b-black font-bold text-black flex justify-center items-center text-[10px] cursor-pointer">□</div>
@@ -402,7 +402,7 @@ export default function MemeMakerGame() {
                                 {fonts.map(f => <option key={f} value={f} style={{fontFamily: f}}>{f}</option>)}
                             </select>
 
-                            <div className="flex gap-2 bg-white border border-black p-2 rounded-xl">
+                            <div className="flex gap-2 bg-[#c0c0c0] border border-black p-2 rounded-xl">
                                 {colors.map(c => (
                                     <button
                                         key={c}
@@ -417,7 +417,7 @@ export default function MemeMakerGame() {
                         <button
                             onClick={submitCaption}
                             disabled={!captionText.trim()}
-                            className="w-full py-4 bg-white text-black font-bold rounded-xl text-lg hover:bg-zinc-200 transition disabled:opacity-50"
+                            className="w-full py-4 bg-[#c0c0c0] text-black font-bold rounded-xl text-lg hover:bg-zinc-200 transition disabled:opacity-50"
                         >
                             Valider
                         </button>
@@ -495,7 +495,7 @@ export default function MemeMakerGame() {
                                 >
                                     <span className="text-2xl uppercase font-black">{caption.text}</span>
                                 </div>
-                                {isMe && <div className="absolute top-4 left-4 bg-[#404040]/80 px-3 py-1 rounded-lg text-sm font-bold border border-white/20">C'est le tien</div>}
+                                {isMe && <div className="absolute top-4 left-4 bg-black/80 px-3 py-1 rounded-lg text-sm font-bold border border-white/20">C'est le tien</div>}
                             </button>
                          )
                     })}
