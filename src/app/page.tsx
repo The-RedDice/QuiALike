@@ -26,6 +26,15 @@ export default function HubHome() {
 
   const games = [
     {
+      id: "mememaker",
+      title: "Meme Maker (feat ISrael)",
+      description: "Ajoute le meilleur texte à un GIF. Le plus drôle gagne !",
+      href: "/mememaker",
+      color: "bg-purple-500",
+      icon: "😂",
+      tags: ["Nouveau", "GIF", "Memes"]
+    },
+    {
       id: "quialike",
       title: "QuiALiké",
       description: "Devinez qui parmi vos amis a liké ces vidéos gênantes.",
