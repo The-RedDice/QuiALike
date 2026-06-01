@@ -79,7 +79,7 @@ export default function HubHome() {
   ];
 
   return (
-    <main className="min-h-screen bg-[#09090b] text-white p-6 selection:bg-[#00f2fe]/30 overflow-hidden relative flex flex-col items-center">
+    <main className="min-h-screen bg-transparent text-black p-6 selection:bg-[#00f2fe]/30 overflow-hidden relative flex flex-col items-center">
       {/* Background ambient light */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-white/5 blur-[120px] rounded-full pointer-events-none -z-10"></div>
 
@@ -88,7 +88,7 @@ export default function HubHome() {
         {/* Header */}
         <div className="text-center space-y-4 animate-in fade-in slide-in-from-bottom-6 duration-700">
           <div className="flex justify-center items-center gap-4 mb-4">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs font-black tracking-widest text-gray-400 uppercase">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs font-black tracking-widest text-[#404040] uppercase">
                 <Sparkles size={14} className="text-yellow-400" />
                 <span>Party Games Hub</span>
               </div>
@@ -106,7 +106,7 @@ export default function HubHome() {
             La Soirée<br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-gray-200 to-gray-500">Commence Ici</span>
           </h1>
-          <p className="text-gray-400 font-medium max-w-md mx-auto mt-6 text-lg">
+          <p className="text-[#404040] font-medium max-w-md mx-auto mt-6 text-lg">
             Des jeux multijoueurs simples et rapides pour animer vos soirées entre potes.
           </p>
         </div>
@@ -124,7 +124,7 @@ export default function HubHome() {
                 className={`
                   group relative flex flex-col p-6 rounded-[2.5rem] border transition-all duration-500
                   animate-in fade-in slide-in-from-bottom-8
-                  ${isActive ? 'bg-[#18181b] border-white/10 hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)] cursor-pointer ' + game.accent : 'bg-[#0f0f12] border-white/5 opacity-70 grayscale-[30%] cursor-default'}
+                  ${isActive ? 'bg-white border-white/10 hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)] cursor-pointer ' + game.accent : 'game-container opacity-50 grayscale cursor-default'}
                 `}
                 style={{ animationDelay: `${index * 150}ms` }}
               >
@@ -135,29 +135,29 @@ export default function HubHome() {
                   {/* Card Header (Tags & Status) */}
                   <div className="flex items-start justify-between mb-8">
                     <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
-                       <Gamepad2 size={24} className={isActive ? "text-white" : "text-gray-500"} />
+                       <Gamepad2 size={24} className={isActive ? "text-black" : "text-[#404040]"} />
                     </div>
                     {isActive ? (
                       <span className="px-3 py-1 rounded-full bg-[#00f2fe]/10 text-[#00f2fe] text-[10px] font-black uppercase tracking-wider border border-[#00f2fe]/20">
                         Jouer
                       </span>
                     ) : (
-                      <span className="px-3 py-1 rounded-full bg-white/5 text-gray-400 text-[10px] font-black uppercase tracking-wider border border-white/10 flex items-center gap-1">
+                      <span className="px-3 py-1 rounded-full bg-white/5 text-[#404040] text-[10px] font-black uppercase tracking-wider border border-white/10 flex items-center gap-1">
                         <Lock size={10} /> Bientôt
                       </span>
                     )}
                   </div>
 
                   {/* Card Body */}
-                  <h3 className="text-2xl font-black mb-3 group-hover:text-white transition-colors text-gray-100">{game.title}</h3>
-                  <p className="text-gray-400 text-sm font-medium leading-relaxed mb-6 flex-1">
+                  <h3 className="text-2xl font-black mb-3 group-hover:text-black transition-colors text-gray-100">{game.title}</h3>
+                  <p className="text-[#404040] text-sm font-medium leading-relaxed mb-6 flex-1">
                     {game.description}
                   </p>
 
                   {/* Card Footer (Tags) */}
                   <div className="flex flex-wrap gap-2 mt-auto">
                     {game.tags.map(tag => (
-                      <span key={tag} className="text-[10px] font-bold text-gray-500 bg-white/5 px-2.5 py-1 rounded-lg uppercase tracking-wider">
+                      <span key={tag} className="text-[10px] font-bold text-[#404040] bg-white/5 px-2.5 py-1 rounded-lg uppercase tracking-wider">
                         {tag}
                       </span>
                     ))}

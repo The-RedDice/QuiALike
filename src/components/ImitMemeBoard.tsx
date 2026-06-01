@@ -258,7 +258,7 @@ export default function ImitMemeBoard({ room, user, socket }: ImitMemeBoardProps
 
       if (currentMeme.fileBase64) {
           return (
-              <div className="relative w-full flex flex-col items-center justify-center p-8 bg-black/50 rounded-2xl overflow-hidden shadow-2xl border border-white/10">
+              <div className="relative w-full flex flex-col items-center justify-center p-8 bg-[#404040]/50 rounded-2xl overflow-hidden shadow-2xl border border-white/10">
                  <audio
                      src={currentMeme.fileBase64}
                      autoPlay
@@ -271,7 +271,7 @@ export default function ImitMemeBoard({ room, user, socket }: ImitMemeBoardProps
                  />
 
                  {/* Visualizer Background */}
-                 <div className="absolute inset-0 flex items-center justify-center gap-1 z-10 bg-black/80 backdrop-blur-sm pointer-events-none">
+                 <div className="absolute inset-0 flex items-center justify-center gap-1 z-10 bg-[#404040]/80 backdrop-blur-sm pointer-events-none">
                      {Array.from({ length: 20 }).map((_, i) => (
                          <div
                             key={i}
@@ -281,12 +281,12 @@ export default function ImitMemeBoard({ room, user, socket }: ImitMemeBoardProps
                          />
                      ))}
                  </div>
-                 <div className="absolute top-4 right-4 bg-black/50 text-white px-4 py-2 rounded-full font-mono text-xl z-20 font-bold tracking-widest backdrop-blur-md">
+                 <div className="absolute top-4 right-4 bg-[#404040]/50 text-black px-4 py-2 rounded-full font-mono text-xl z-20 font-bold tracking-widest backdrop-blur-md">
                     00:{timeLeft.toString().padStart(2, '0')}
                  </div>
                  {room.status === 'playing_meme' && !room.memeStartTime && (
-                     <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/80 backdrop-blur-md">
-                        <span className="text-white font-black animate-pulse text-xl">En attente des joueurs...</span>
+                     <div className="absolute inset-0 z-30 flex items-center justify-center bg-[#404040]/80 backdrop-blur-md">
+                        <span className="text-black font-black animate-pulse text-xl">En attente des joueurs...</span>
                      </div>
                  )}
               </div>
@@ -294,7 +294,7 @@ export default function ImitMemeBoard({ room, user, socket }: ImitMemeBoardProps
       }
 
       return (
-          <div className="relative w-full aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl border border-white/10 group">
+          <div className="relative w-full aspect-video bg-[#404040] rounded-2xl overflow-hidden shadow-2xl border border-white/10 group">
              {currentMeme.platform === 'tiktok' ? (
                  <iframe src={embedUrl} allow="autoplay; fullscreen" className="absolute w-full h-[120%] -top-[10%] left-0 opacity-0 z-0 pointer-events-none" />
              ) : (
@@ -302,7 +302,7 @@ export default function ImitMemeBoard({ room, user, socket }: ImitMemeBoardProps
              )}
 
              {/* Audio Visualizer Overlay */}
-             <div className="absolute inset-0 flex items-center justify-center gap-1 z-10 bg-black/80 backdrop-blur-sm pointer-events-none">
+             <div className="absolute inset-0 flex items-center justify-center gap-1 z-10 bg-[#404040]/80 backdrop-blur-sm pointer-events-none">
                  {Array.from({ length: 20 }).map((_, i) => (
                      <div
                         key={i}
@@ -312,7 +312,7 @@ export default function ImitMemeBoard({ room, user, socket }: ImitMemeBoardProps
                      />
                  ))}
              </div>
-             <div className="absolute top-4 right-4 bg-black/50 text-white px-4 py-2 rounded-full font-mono text-xl z-20 font-bold tracking-widest backdrop-blur-md">
+             <div className="absolute top-4 right-4 bg-[#404040]/50 text-black px-4 py-2 rounded-full font-mono text-xl z-20 font-bold tracking-widest backdrop-blur-md">
                 00:{timeLeft.toString().padStart(2, '0')}
              </div>
           </div>
@@ -321,17 +321,17 @@ export default function ImitMemeBoard({ room, user, socket }: ImitMemeBoardProps
 
 
   return (
-    <div className="min-h-screen bg-[#09090b] text-white p-4 md:p-8 font-sans flex flex-col items-center overflow-x-hidden">
+    <div className="min-h-screen bg-white text-black p-4 md:p-8 font-sans flex flex-col items-center overflow-x-hidden">
       <audio ref={audioPlayerRef} onEnded={() => { setIsPlayingRecording(false); stopRealVisualizer(); }} />
 
       {/* Header */}
       <header className="w-full max-w-5xl flex justify-between items-center mb-8 relative z-10">
         <div className="flex flex-col">
            <span className="text-[#00f2fe] text-xs font-black uppercase tracking-widest">Imit&apos;Mème</span>
-           <span className="text-gray-400 font-medium text-sm">Manche {room.currentMemeIndex + 1}/{room.memes.length}</span>
+           <span className="text-[#404040] font-medium text-sm">Manche {room.currentMemeIndex + 1}/{room.memes.length}</span>
         </div>
         <div className="px-4 py-2 bg-white/5 rounded-2xl flex items-center gap-3 border border-white/10 shadow-sm backdrop-blur-md">
-           <Users size={16} className="text-gray-400" />
+           <Users size={16} className="text-[#404040]" />
            <span className="font-bold">{room.players.length}</span>
         </div>
       </header>
@@ -343,7 +343,7 @@ export default function ImitMemeBoard({ room, user, socket }: ImitMemeBoardProps
               <div className="w-full space-y-6 animate-in fade-in slide-in-from-bottom-8">
                   <div className="text-center mb-4">
                       <h2 className="text-3xl font-black italic tracking-tight uppercase text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">Écoutez bien...</h2>
-                      <p className="text-gray-400 font-medium mt-2">Mémorisez l&apos;audio, vous allez devoir l&apos;imiter !</p>
+                      <p className="text-[#404040] font-medium mt-2">Mémorisez l&apos;audio, vous allez devoir l&apos;imiter !</p>
                   </div>
                   {renderMemePlayer()}
               </div>
@@ -360,7 +360,7 @@ export default function ImitMemeBoard({ room, user, socket }: ImitMemeBoardProps
                      <Mic size={48} className="text-[#fe2c55]" />
                   </motion.div>
                   <div className="text-center">
-                     <h2 className="text-4xl font-black tracking-tighter uppercase text-white mb-4">À votre tour !</h2>
+                     <h2 className="text-4xl font-black tracking-tighter uppercase text-black mb-4">À votre tour !</h2>
                      <div className="text-6xl font-mono font-black text-[#fe2c55]">00:{timeLeft.toString().padStart(2, '0')}</div>
                   </div>
               </div>
@@ -371,7 +371,7 @@ export default function ImitMemeBoard({ room, user, socket }: ImitMemeBoardProps
               <div className="w-full space-y-8 animate-in fade-in">
                   <div className="text-center">
                       <h2 className="text-3xl font-black italic tracking-tight uppercase">Les Imitations</h2>
-                      <p className="text-gray-400 font-medium mt-2">
+                      <p className="text-[#404040] font-medium mt-2">
                           {room.status === 'listening' ? "Écoutez les chefs-d'œuvre de vos amis" : "Votez pour le meilleur !"}
                       </p>
                   </div>
@@ -394,7 +394,7 @@ export default function ImitMemeBoard({ room, user, socket }: ImitMemeBoardProps
                                  disabled={(room.status === 'voting' && (hasVoted || p.id === user.id)) || (room.status === 'listening' && !user.isHost)}
                                  className={`
                                      relative p-6 rounded-3xl border-2 flex items-center gap-4 transition-all duration-300 overflow-hidden
-                                     ${isCurrentlyPlaying ? 'border-[#00f2fe] bg-[#00f2fe]/10 scale-105 shadow-xl shadow-[#00f2fe]/20' : 'border-white/10 bg-[#18181b] hover:border-white/20'}
+                                     ${isCurrentlyPlaying ? 'border-[#00f2fe] bg-[#00f2fe]/10 scale-105 shadow-xl shadow-[#00f2fe]/20' : 'border-white/10 bg-white hover:border-white/20'}
                                      ${room.status === 'voting' && p.id === user.id ? 'opacity-50 grayscale' : ''}
                                  `}
                               >
@@ -414,7 +414,7 @@ export default function ImitMemeBoard({ room, user, socket }: ImitMemeBoardProps
                                               {isCurrentlyPlaying ? (
                                                   <div className="text-[#00f2fe] text-xs font-bold animate-pulse flex items-center gap-1"><Play size={12} fill="currentColor"/> En écoute...</div>
                                               ) : (
-                                                  <div className="text-xs text-gray-500 flex items-center gap-1"><Play size={10}/> En attente</div>
+                                                  <div className="text-xs text-[#404040] flex items-center gap-1"><Play size={10}/> En attente</div>
                                               )}
                                           </div>
                                       )}
@@ -451,18 +451,18 @@ export default function ImitMemeBoard({ room, user, socket }: ImitMemeBoardProps
 
                           return (
                               <div key={p.id} className="bg-white/10 p-4 rounded-3xl flex items-center gap-4">
-                                  <div className="text-2xl font-black text-gray-500 w-8 text-center">#{idx + 1}</div>
+                                  <div className="text-2xl font-black text-[#404040] w-8 text-center">#{idx + 1}</div>
                                   <div className="relative">
                                       <img src={p.avatar} alt="" className="w-14 h-14 rounded-full ring-2 ring-white" />
                                       {chatBubbles[p.username] && <ChatBubble text={chatBubbles[p.username].text} />}
                                   </div>
                                   <div className="flex-1">
                                       <span className="font-black text-xl">{p.username}</span>
-                                      <div className="text-sm text-gray-400">{votesReceived} votes</div>
+                                      <div className="text-sm text-[#404040]">{votesReceived} votes</div>
                                   </div>
                                   <div className="text-right">
                                       <div className="font-black text-2xl text-green-400">+{pointsGained}</div>
-                                      <div className="text-xs text-gray-500 font-bold uppercase">{p.score} total</div>
+                                      <div className="text-xs text-[#404040] font-bold uppercase">{p.score} total</div>
                                   </div>
                               </div>
                           );
@@ -486,7 +486,7 @@ export default function ImitMemeBoard({ room, user, socket }: ImitMemeBoardProps
                   <div className="bg-white/10 p-8 rounded-[3rem] inline-block text-left min-w-[300px]">
                       {room.players.sort((a,b) => b.score - a.score).map((p, idx) => (
                           <div key={p.id} className="flex items-center gap-6 mb-4 last:mb-0">
-                              <span className="text-3xl font-black text-gray-500">#{idx + 1}</span>
+                              <span className="text-3xl font-black text-[#404040]">#{idx + 1}</span>
                               <div className="relative">
                                   <img src={p.avatar} alt="" className="w-16 h-16 rounded-full" />
                                   {chatBubbles[p.username] && <ChatBubble text={chatBubbles[p.username].text} />}

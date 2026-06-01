@@ -132,10 +132,10 @@ export default function GameBoard({ room, user, socket }: GameBoardProps) {
   if (room.status === 'leaderboard') {
     const sortedPlayers = [...room.players].sort((a, b) => b.score - a.score);
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-[#09090b] text-white animate-in fade-in duration-700 relative w-full">
+      <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-white text-black animate-in fade-in duration-700 relative w-full">
         <button
           onClick={handleLeave}
-          className="absolute top-6 left-6 p-3 rounded-full bg-white/5 hover:bg-[#fe2c55]/20 text-gray-400 hover:text-[#fe2c55] transition-colors border border-white/10 group z-50 flex items-center gap-2"
+          className="absolute top-6 left-6 p-3 rounded-full bg-white/5 hover:bg-[#fe2c55]/20 text-[#404040] hover:text-[#fe2c55] transition-colors border border-white/10 group z-50 flex items-center gap-2"
         >
           <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
           <span className="font-bold text-sm hidden sm:inline">Quitter</span>
@@ -162,13 +162,13 @@ export default function GameBoard({ room, user, socket }: GameBoardProps) {
                   }}
                   className={`
                     absolute w-full flex items-center gap-4 p-5 rounded-[2rem] transition-colors
-                    ${index === 0 ? 'bg-black text-white border-2 border-yellow-400/50 shadow-[0_0_30px_rgba(250,204,21,0.2)]' : 'bg-white/5 border border-white/10'}
+                    ${index === 0 ? 'bg-[#404040] text-black border-2 border-yellow-400/50 shadow-[0_0_30px_rgba(250,204,21,0.2)]' : 'bg-white/5 border border-white/10'}
                   `}
                   style={{ top: index * 90 }} // 90px spacing between items
                 >
                   <div className={`
                       w-10 h-10 rounded-full flex items-center justify-center font-black text-lg
-                      ${index === 0 ? 'bg-yellow-400 text-black' : 'bg-white/10 text-gray-400'}
+                      ${index === 0 ? 'bg-yellow-400 text-black' : 'bg-white/10 text-[#404040]'}
                   `}>
                       {index + 1}
                   </div>
@@ -180,7 +180,7 @@ export default function GameBoard({ room, user, socket }: GameBoardProps) {
                   <span className="font-bold text-xl flex-1 text-left truncate">@{p.username}</span>
 
                   <div className="text-right flex flex-col">
-                      <span className={`font-black text-2xl ${index === 0 ? 'text-yellow-400' : 'text-white'}`}>{p.score}</span>
+                      <span className={`font-black text-2xl ${index === 0 ? 'text-yellow-400' : 'text-black'}`}>{p.score}</span>
                       {pointsGained > 0 && (
                           <motion.span
                               initial={{ opacity: 0, x: -10 }}
@@ -207,7 +207,7 @@ export default function GameBoard({ room, user, socket }: GameBoardProps) {
               <ArrowRight size={20} />
             </button>
           ) : (
-            <div className="text-center py-4 text-white/40 font-bold text-sm animate-pulse italic">
+            <div className="text-center py-4 text-black/40 font-bold text-sm animate-pulse italic">
                 En attente du host pour la suite...
             </div>
           )}
@@ -219,17 +219,17 @@ export default function GameBoard({ room, user, socket }: GameBoardProps) {
   if (room.status === 'ended') {
     const sortedPlayers = [...room.players].sort((a, b) => b.score - a.score);
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-[#09090b] text-white animate-in fade-in duration-700 relative">
+      <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-white text-black animate-in fade-in duration-700 relative">
         <button
           onClick={handleLeave}
-          className="absolute top-6 left-6 p-3 rounded-full bg-white/5 hover:bg-[#fe2c55]/20 text-gray-400 hover:text-[#fe2c55] transition-colors border border-white/10 group z-50 flex items-center gap-2"
+          className="absolute top-6 left-6 p-3 rounded-full bg-white/5 hover:bg-[#fe2c55]/20 text-[#404040] hover:text-[#fe2c55] transition-colors border border-white/10 group z-50 flex items-center gap-2"
         >
           <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
           <span className="font-bold text-sm hidden sm:inline">Quitter</span>
         </button>
         <div className="w-full max-w-md text-center">
           <div className="inline-block p-4 bg-yellow-400 rounded-full mb-6 shadow-xl shadow-yellow-200">
-            <Trophy className="w-12 h-12 text-white" />
+            <Trophy className="w-12 h-12 text-black" />
           </div>
           <h1 className="text-4xl font-black italic tracking-tighter mb-12">PODIUM FINAL</h1>
 
@@ -239,12 +239,12 @@ export default function GameBoard({ room, user, socket }: GameBoardProps) {
                 key={p.id}
                 className={`
                   flex items-center gap-4 p-5 rounded-[2rem] transition-all
-                  ${index === 0 ? 'bg-black text-white scale-105 shadow-2xl' : 'bg-white/5 border border-white/10'}
+                  ${index === 0 ? 'bg-[#404040] text-black scale-105 shadow-2xl' : 'bg-white/5 border border-white/10'}
                 `}
               >
                 <div className={`
                     w-10 h-10 rounded-full flex items-center justify-center font-black text-lg
-                    ${index === 0 ? 'bg-yellow-400 text-white' : 'bg-white/10 text-gray-400'}
+                    ${index === 0 ? 'bg-yellow-400 text-black' : 'bg-white/10 text-[#404040]'}
                 `}>
                     {index + 1}
                 </div>
@@ -254,7 +254,7 @@ export default function GameBoard({ room, user, socket }: GameBoardProps) {
                     {chatBubbles[p.username] && <ChatBubble text={chatBubbles[p.username].text} />}
                 </div>
                 <span className="font-bold text-xl flex-1 text-left truncate">@{p.username}</span>
-                <span className={`font-black text-xl ${index === 0 ? 'text-yellow-400' : 'text-white'}`}>{p.score}</span>
+                <span className={`font-black text-xl ${index === 0 ? 'text-yellow-400' : 'text-black'}`}>{p.score}</span>
               </div>
             ))}
           </div>
@@ -271,16 +271,16 @@ export default function GameBoard({ room, user, socket }: GameBoardProps) {
   }
 
   return (
-    <div className="flex flex-col lg:flex-row items-center justify-center min-h-screen p-4 gap-12 bg-[#09090b] text-white overflow-hidden relative">
+    <div className="flex flex-col lg:flex-row items-center justify-center min-h-screen p-4 gap-12 bg-white text-black overflow-hidden relative">
       <button
         onClick={handleLeave}
-        className="absolute top-6 left-6 p-3 rounded-full bg-white/5 hover:bg-[#fe2c55]/20 text-gray-400 hover:text-[#fe2c55] transition-colors border border-white/10 group z-50 flex items-center gap-2"
+        className="absolute top-6 left-6 p-3 rounded-full bg-white/5 hover:bg-[#fe2c55]/20 text-[#404040] hover:text-[#fe2c55] transition-colors border border-white/10 group z-50 flex items-center gap-2"
       >
         <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
         <span className="font-bold text-sm hidden sm:inline">Quitter</span>
       </button>
       {/* Video Section */}
-      <div className="relative w-full max-w-[320px] aspect-[9/16] bg-black rounded-[2.5rem] overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.2)] border-[10px] border-gray-900 group">
+      <div className="relative w-full max-w-[320px] aspect-[9/16] bg-[#404040] rounded-[2.5rem] overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.2)] border-[10px] border-gray-900 group">
         {currentVideo.platform === 'tiktok' && currentVideo.videoId ? (
             <iframe
               key={currentVideo.videoId}
@@ -324,11 +324,11 @@ export default function GameBoard({ room, user, socket }: GameBoardProps) {
         </div>
 
         <div className="absolute top-8 left-0 right-0 px-6 flex justify-between items-center pointer-events-none">
-          <div className="bg-black/40 backdrop-blur-xl px-4 py-2 rounded-2xl flex items-center gap-2 text-white font-black border border-white/10 text-sm">
-            <Timer size={16} className={timeLeft <= 5 ? 'text-red-400 animate-pulse' : 'text-white'} />
-            <span className={timeLeft <= 5 ? 'text-red-400' : 'text-white'}>{revealed ? 'FIN' : !room.videoStartTime ? '...' : `${timeLeft}s`}</span>
+          <div className="bg-[#404040]/40 backdrop-blur-xl px-4 py-2 rounded-2xl flex items-center gap-2 text-black font-black border border-white/10 text-sm">
+            <Timer size={16} className={timeLeft <= 5 ? 'text-red-400 animate-pulse' : 'text-black'} />
+            <span className={timeLeft <= 5 ? 'text-red-400' : 'text-black'}>{revealed ? 'FIN' : !room.videoStartTime ? '...' : `${timeLeft}s`}</span>
           </div>
-          <div className="bg-black/40 backdrop-blur-xl px-4 py-2 rounded-2xl text-white font-black border border-white/10 text-sm">
+          <div className="bg-[#404040]/40 backdrop-blur-xl px-4 py-2 rounded-2xl text-black font-black border border-white/10 text-sm">
             {room.currentVideoIndex + 1} / {room.videos.length}
           </div>
         </div>
@@ -341,7 +341,7 @@ export default function GameBoard({ room, user, socket }: GameBoardProps) {
             <div className="text-center lg:text-left">
               <h2 className="text-4xl font-black italic tracking-tighter uppercase leading-none">C&apos;est qui<br/>le coupable ?</h2>
               <div className="flex items-center justify-center lg:justify-start gap-2 mt-4">
-                  <p className="text-gray-400 font-medium">{votedCount} / {room.players.length - currentVideo.correctPlayerIds.length} ont voté</p>
+                  <p className="text-[#404040] font-medium">{votedCount} / {room.players.length - currentVideo.correctPlayerIds.length} ont voté</p>
                   {hasVoted && !revealed && <Loader2 size={16} className="animate-spin text-blue-500" />}
               </div>
             </div>
@@ -372,21 +372,21 @@ export default function GameBoard({ room, user, socket }: GameBoardProps) {
                     <img src={p.avatar} alt={p.username} className="w-14 h-14 rounded-full ring-4 ring-white shadow-sm" />
                     {chatBubbles[p.username] && <ChatBubble text={chatBubbles[p.username].text} />}
                     {revealed && isCorrect && (
-                        <div className="absolute -top-1 -right-1 bg-green-500 text-white rounded-full p-1 shadow-lg">
+                        <div className="absolute -top-1 -right-1 bg-green-500 text-black rounded-full p-1 shadow-lg">
                             <CheckCircle2 size={14} />
                         </div>
                     )}
                     {revealed && !isCorrect && isMyChoice && (
-                        <div className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-1 shadow-lg">
+                        <div className="absolute -top-1 -right-1 bg-red-500 text-black rounded-full p-1 shadow-lg">
                             <XCircle size={14} />
                         </div>
                     )}
                 </div>
                 <div className="flex-1">
-                    <span className={`block font-black text-lg ${revealed && isCorrect ? 'text-green-700' : 'text-white'}`}>
+                    <span className={`block font-black text-lg ${revealed && isCorrect ? 'text-green-700' : 'text-black'}`}>
                         @{p.username}
                     </span>
-                    <span className="text-[10px] font-bold uppercase text-gray-400 tracking-wider">
+                    <span className="text-[10px] font-bold uppercase text-[#404040] tracking-wider">
                         {p.isHost ? 'Host' : 'Joueur'}
                     </span>
                 </div>
@@ -400,10 +400,10 @@ export default function GameBoard({ room, user, socket }: GameBoardProps) {
             <div className="flex flex-col items-center justify-center h-full text-center p-8 bg-white/5 rounded-[2.5rem] border border-white/10 relative overflow-hidden">
                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#00f2fe] to-transparent animate-pulse" />
                <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#fe2c55] to-transparent animate-pulse" />
-               <Loader2 size={48} className="animate-spin text-white mb-6" />
+               <Loader2 size={48} className="animate-spin text-black mb-6" />
                <h2 className="text-3xl font-black italic tracking-tighter uppercase mb-2">C&apos;est ta vidéo !</h2>
-               <p className="text-gray-400 font-medium">Laisse les autres deviner qui a liké ça...</p>
-               <div className="mt-8 px-4 py-2 bg-black/40 rounded-full text-sm font-bold border border-white/10">
+               <p className="text-[#404040] font-medium">Laisse les autres deviner qui a liké ça...</p>
+               <div className="mt-8 px-4 py-2 bg-[#404040]/40 rounded-full text-sm font-bold border border-white/10">
                   {votedCount} / {room.players.length - 1} ont voté
                </div>
             </div>
@@ -411,14 +411,14 @@ export default function GameBoard({ room, user, socket }: GameBoardProps) {
         )}
 
         {revealed && (
-          <div className="p-8 rounded-[2.5rem] bg-[#18181b] text-white shadow-2xl border border-white/10 animate-in fade-in zoom-in duration-500">
+          <div className="p-8 rounded-[2.5rem] bg-white text-black shadow-2xl border border-white/10 animate-in fade-in zoom-in duration-500">
             {!isMyVideo ? (
               <div className="flex items-center gap-5 mb-8">
                 <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg ${revealData?.results[user.id]?.isCorrect ? 'bg-green-500' : 'bg-[#fe2c55]'}`}>
                   {revealData?.results[user.id]?.isCorrect ? <CheckCircle2 size={30} /> : <XCircle size={30} />}
                 </div>
                 <div>
-                  <p className="text-xs font-black uppercase tracking-[0.2em] text-white/40">Verdict</p>
+                  <p className="text-xs font-black uppercase tracking-[0.2em] text-black/40">Verdict</p>
                   <p className="text-2xl font-black italic">{revealData?.results[user.id]?.isCorrect ? "BIEN JOUÉ !" : "T'ES NUL..."}</p>
                 </div>
               </div>
@@ -428,7 +428,7 @@ export default function GameBoard({ room, user, socket }: GameBoardProps) {
                   <CheckCircle2 size={30} className="text-black" />
                 </div>
                 <div>
-                  <p className="text-xs font-black uppercase tracking-[0.2em] text-white/40">Verdict</p>
+                  <p className="text-xs font-black uppercase tracking-[0.2em] text-black/40">Verdict</p>
                   <p className="text-2xl font-black italic">C&apos;était toi !</p>
                 </div>
               </div>
@@ -445,7 +445,7 @@ export default function GameBoard({ room, user, socket }: GameBoardProps) {
             )}
 
             {!user.isHost && (
-                <div className="text-center py-4 text-white/40 font-bold text-sm animate-pulse italic">
+                <div className="text-center py-4 text-black/40 font-bold text-sm animate-pulse italic">
                     En attente du host pour la suite...
                 </div>
             )}
