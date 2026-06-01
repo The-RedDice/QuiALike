@@ -60,3 +60,78 @@ body {
   border: 4px solid #fff;
   border-radius: 20px 5px 20px 5px;
 }
+
+/* Unified Goofy Components */
+.game-container {
+  background-color: #18181b;
+  border: 4px solid #fff;
+  border-radius: 20px 5px 20px 5px;
+  box-shadow: 6px 6px 0px #fe2c55, -6px -6px 0px #00f2fe;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.game-title {
+  font-family: var(--font-bangers);
+  font-weight: 900;
+  text-transform: uppercase;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  background-image: linear-gradient(to right, #a855f7, #ec4899);
+  animation: bounce-wild 1.5s cubic-bezier(0.28, 0.84, 0.42, 1) infinite;
+  text-align: center;
+  filter: drop-shadow(0 4px 4px rgba(0,0,0,0.5));
+}
+
+.game-button {
+  width: 100%;
+  padding: 1rem;
+  background-color: #fff;
+  color: #000;
+  font-weight: 900;
+  font-family: var(--font-bangers);
+  font-size: 1.5rem;
+  border-radius: 0.75rem;
+  border: 4px solid #000;
+  box-shadow: 4px 4px 0px #000;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.game-button:hover:not(:disabled) {
+  transform: translate(-2px, -2px) scale(1.02);
+  box-shadow: 6px 6px 0px #fe2c55;
+}
+
+.game-button:active:not(:disabled) {
+  transform: translate(2px, 2px);
+  box-shadow: 0px 0px 0px #fe2c55;
+}
+
+.game-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: 2px 2px 0px #000;
+}
+
+.game-input {
+  width: 100%;
+  background-color: #09090b;
+  border: 3px solid #3f3f46;
+  padding: 1rem;
+  border-radius: 0.75rem;
+  outline: none;
+  font-weight: bold;
+  font-family: var(--font-comic-neue);
+  font-size: 1.1rem;
+  transition: all 0.2s ease;
+  color: #fff;
+}
+
+.game-input:focus {
+  border-color: #a855f7;
+  transform: scale(1.02);
+}
