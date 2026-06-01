@@ -57,6 +57,8 @@ export default function MemeMakerGame() {
     const newSocket = io();
     setSocket(newSocket);
 
+    newSocket.on("room-created", (room) => { setGameState(room); });
+    newSocket.on("room-updated", (room) => { setGameState(room); });
     newSocket.on("room-update", (room) => {
       setGameState(room);
     });
