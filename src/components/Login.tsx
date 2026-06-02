@@ -1,13 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { playTTS } from "@/lib/tts";
 
 interface LoginProps {
   onLogin: (username: string, avatar: string, voicePitch?: number, voiceRate?: number) => void;
+  initialProfile?: { username: string; avatar: string; voicePitch?: number; voiceRate?: number } | null;
 }
 
-export default function Login({ onLogin }: LoginProps) {
+export default function Login({ onLogin, initialProfile }: LoginProps) {
   const [username, setUsername] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -22,6 +23,33 @@ export default function Login({ onLogin }: LoginProps) {
   // Voice Customization State
   const [voicePitch, setVoicePitch] = useState(1.0);
   const [voiceRate, setVoiceRate] = useState(1.0);
+
+  useEffect(() => {
+    if (initialProfile) {
+        setUsername(initialProfile.username || "");
+        if (initialProfile.voicePitch !== undefined) setVoicePitch(initialProfile.voicePitch);
+        if (initialProfile.voiceRate !== undefined) setVoiceRate(initialProfile.voiceRate);
+
+        if (initialProfile.avatar) {
+            try {
+                const url = new URL(initialProfile.avatar);
+                const seed = url.searchParams.get("seed");
+                const skin = url.searchParams.get("skinColor");
+                const h = url.searchParams.get("hair");
+                const acc = url.searchParams.get("accessories");
+                const cloth = url.searchParams.get("clothing");
+
+                if (seed) setAvatarSeed(seed);
+                if (skin) setSkinColor(skin);
+                if (h) setHair(h);
+                if (acc) setAccessories(acc);
+                if (cloth) setClothing(cloth);
+            } catch (e) {
+                console.error("Failed to parse avatar URL", e);
+            }
+        }
+    }
+  }, [initialProfile]);
 
   const skinColors = ["ffdbb4", "edb98a", "fd9841", "f8d25c", "d08b5b", "ae5d29", "614335"];
   const hairOptions = ["noHair", "eyepatch", "hat", "hijab", "turban", "winterHat1", "winterHat2", "winterHat3", "winterHat4", "longHair", "longHairBob", "longHairBun", "longHairCurly", "longHairCurvy", "longHairDreads", "longHairFrida", "longHairFro", "longHairFroBand", "longHairNotTooLong", "longHairShavedSides", "longHairMiaWallace", "longHairStraight", "longHairStraight2", "longHairStraightStrand", "shortHair", "shortHairDreads01", "shortHairDreads02", "shortHairFrizzle", "shortHairShaggyMullet", "shortHairShortCurly", "shortHairShortFlat", "shortHairShortRound", "shortHairShortWaved", "shortHairSides", "shortHairTheCaesar", "shortHairTheCaesarSidePart"];

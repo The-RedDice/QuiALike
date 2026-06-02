@@ -274,10 +274,13 @@ export default function Home() {
 
         {!isLoggedIn ? (
           <div className="bg-[#18181b] p-8 rounded-3xl border border-white/10">
-            <Login onLogin={(username, avatar, voicePitch, voiceRate) => {
-              setProfile({ username, avatar, voicePitch, voiceRate });
-              setIsLoggedIn(true);
-            }} />
+            <Login
+                onLogin={(username, avatar, voicePitch, voiceRate) => {
+                  setProfile({ username, avatar, voicePitch, voiceRate });
+                  setIsLoggedIn(true);
+                }}
+                initialProfile={profile.username ? profile : null}
+            />
           </div>
         ) : (
           <div className="space-y-6">
@@ -286,6 +289,9 @@ export default function Home() {
                 <img src={profile.avatar} alt={profile.username} className="w-12 h-12 rounded-full" />
                 <div className="flex-1">
                     <p className="text-xl font-black truncate">@{profile.username}</p>
+                    <button onClick={() => setIsLoggedIn(false)} className="text-[10px] mt-1 bg-white/10 px-2 py-0.5 rounded text-white hover:bg-white/20 uppercase cursor-pointer">
+                        Modifier
+                    </button>
                 </div>
                 <button onClick={handleLogout} className="p-2 bg-white/5 rounded-full hover:bg-red-500/20 text-gray-400 hover:text-red-500">
                    X

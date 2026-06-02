@@ -369,10 +369,13 @@ export default function ImitMemeHome() {
 
         {!isLoggedIn ? (
           <div className="bg-[#09090b]/60 backdrop-blur-xl p-8 rounded-[3rem] border border-white/10 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
-            <Login onLogin={(username, avatar, voicePitch, voiceRate) => {
-              setProfile({ username, avatar, voicePitch, voiceRate });
-              setIsLoggedIn(true);
-            }} />
+            <Login
+                onLogin={(username, avatar, voicePitch, voiceRate) => {
+                  setProfile({ username, avatar, voicePitch, voiceRate });
+                  setIsLoggedIn(true);
+                }}
+                initialProfile={profile.username ? profile : null}
+            />
           </div>
         ) : (
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -382,6 +385,9 @@ export default function ImitMemeHome() {
                 <div className="flex-1">
                     <p className="text-[10px] font-black tracking-widest text-[#00f2fe] uppercase mb-0.5">Connecté</p>
                     <p className="text-xl font-black text-white truncate">@{profile.username}</p>
+                    <button onClick={() => setIsLoggedIn(false)} className="text-[10px] mt-1 bg-white/10 px-2 py-0.5 rounded text-white hover:bg-white/20 uppercase cursor-pointer">
+                        Modifier
+                    </button>
                 </div>
                 <button onClick={handleLogout} className="w-10 h-10 rounded-full bg-white/5 hover:bg-[#fe2c55]/20 flex items-center justify-center text-gray-400 hover:text-[#fe2c55] transition-colors" title="Se déconnecter">
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>

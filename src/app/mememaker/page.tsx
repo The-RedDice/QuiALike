@@ -187,7 +187,19 @@ export default function MemeMakerGame() {
   };
 
   if (!profile) {
-    return <Login onLogin={(username, avatar, voicePitch, voiceRate) => setProfile({ username, avatar, voicePitch, voiceRate })} />;
+    return (
+      <div className="min-h-screen p-8 bg-[#09090b] flex items-center justify-center">
+        <Login
+            onLogin={(username, avatar, voicePitch, voiceRate) => setProfile({ username, avatar, voicePitch, voiceRate })}
+            initialProfile={(() => {
+                try {
+                    const match = document.cookie.match(new RegExp('(^| )quialike_profile=([^;]+)'));
+                    return match ? JSON.parse(match[2]) : null;
+                } catch { return null; }
+            })()}
+        />
+      </div>
+    );
   }
 
   if (!gameState) {
@@ -369,6 +381,11 @@ export default function MemeMakerGame() {
                         <div className="font-bold flex items-center gap-2">
                           {p.username}
                           {p.isHost && <Crown size={14} className="text-yellow-500" />}
+                          {p.id === currentPlayer?.id && (
+                              <button onClick={() => setProfile(null)} className="ml-auto text-[10px] bg-[#808080] px-2 py-0.5 rounded text-white hover:bg-black uppercase border border-black cursor-pointer">
+                                  Modifier
+                              </button>
+                          )}
                         </div>
                         <div className="text-xs text-[#404040]">
                           {p.offline ? "Déconnecté" : (p.hasSubmittedVideos ? "Prêt" : "Cherche un GIF...")}
